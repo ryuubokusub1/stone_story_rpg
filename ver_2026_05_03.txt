@@ -1,0 +1,146 @@
+//▼▼ここから　関数▼▼
+var ctimer=0
+func stoneCross()
+ ?ctimer=0
+  equip stone socketed crossbow
+  ?item.right.state=3
+   ctimer++
+ ?ctimer>0&ctimer<3
+  equip R hatchet
+  equip L tri
+  ctimer++
+ :
+  ctimer=0
+>`5,6,@loc.bestTime@/@totaltime@
+var condition=＂＂
+var ytimer=0
+var setscr=0
+func CD(item)
+ return item.GetCooldown(item)
+func ability(C,item)
+ ?item.CanActivate()&CD(C)<=0
+  equip R @item@
+  activate R
+  return true
+ :
+  return false
+var Btime = 0
+func bladeability(C)
+ ?item.CanActivate()&CD(C)<=0
+  equip  @C@
+  Screen.Next()
+  Btime++
+ ?Btime > 25
+  activate R
+  Screen.ResetOffset()
+  Btime = 0
+  return true
+ :
+  return false
+
+//召喚の関数
+func Summon(str)
+ ?summon.count=0|
+ ^(totaltime>2&totaltime<=30)
+  ?item.CanActivate()
+   equip R @str@+＂ talisman＂
+   equip L tri
+   activate R
+   return false
+ return true
+
+func soubi(a,b)
+ equip R @a@
+ equip L @b@
+
+func aac(a,b)
+ ?time%3=0
+   soubi(a,＂moon＂)
+ :?time%3=1
+   soubi(a,b)
+ :
+  soubi(＂moon＂,b)
+
+func LRAAC(str)
+ equip @str@
+ ?item.right.state=3
+   equip qu
+   equip @str@
+
+var ctimer=0
+func stoneCross()
+ ?ctimer=0
+   equip stone socketed crossbow
+   ?item.right.state=3
+     ctimer++
+ ?ctimer>0&ctimer<3
+   equip R hatchet
+   equip L tri
+   ctimer++
+ :
+   ctimer=0
+
+var ele=［＂ice＂,＂fire＂,＂aether＂,
+＂vigor＂,＂poison＂］
+func FoeEle()
+ for i=0..4
+  ?foe=ele［i］
+    return ele［(i+1)%5］+＂ A shield＂
+ return ＂compound＂
+////////////////////////////////////
+?loc.begin|loc.loop
+ equip R compound
+ equip L tri
+?Summon(＂aether＂)
+ ?foe.distance>20
+   equip R @FoeEle()@
+   equip L tri
+ :
+  ?foe!boss
+   ?foe.distance>8
+     stoneCross()
+   :
+    LRAAC(＂repeat＂)
+    ?foe.count>4
+      ?!bladeability(＂blade＂) 
+       activate voidweaver
+  :
+   ?foe.distance>5
+    ?!ability(＂bash＂,＂bash＂)
+      ?!ability(＂dash＂,＂dash＂)
+       ?!ability(＂quarterstaff＂,＂qu＂)
+          LRAAC(＂repeat＂)
+   :
+    ?foe=giant_ice
+     aac(＂fire sw 21/21 D＂,＂2fire 21/21 sw2 D＂)
+   
+    ?foe = yeti
+     ?foe.distance>4
+      equipR compo
+      equipL tri
+     ?foe.distance<=4
+      ?foe.armor>0
+       equipR mask
+       equipL ice di sword
+      :
+       ytimer++
+     ?ytimer>50
+       ?ability(＂heavy_hammer＂,＂heavy＂)
+          equip heavy hammer
+          activate R
+          condition = ＂雪山ヘビハン＂
+       :?ability(＂mask＂,＂mask＂)
+           equip mask
+           activate R
+           condition = ＂マスク＂
+       :?ability(＂bardiche＂,＂bardiche＂)
+          equip bardiche
+          activate R
+       :?item.potion ! empty
+          activate Potion
+          condition = ＂ポーション＂
+       :?ability(＂staff_poison＂,＂staff poison＂)
+          equip poison staff
+          activate R
+       :
+         aac(＂fi sw 21/21 D＂,＂2fi 21/21 sw2 D＂)
