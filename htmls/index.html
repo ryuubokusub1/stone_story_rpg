@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GitHub Viewer</title>
+
+<style>
+body { font-family: sans-serif; margin: 10px; }
+textarea { width: 60ch; height: 300px; }
+</style>
+</head>
+
+<body>
+
+<h3>ファイル一覧</h3>
+<select id="fileList"></select>
+<button onclick="loadFile()">読み込み</button>
+
+<h3>内容</h3>
+<button onclick="OpenURL()">Commit用</button>
+<button onclick="copyTextarea(this)">コピー</button><br>
+<textarea id="content"></textarea>
+
+<h3>メモ欄</h3>
+<button onclick="copyTextarea(this)">コピー</button><br>
+<textarea id="memo"></textarea>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbzlamueSTT7Kt_6XONUZEQUsELRoW7-HBeXziJqE8yzwm0yHJLC3rCE9TvP7g-_NEWECA/exec";
+
+// ------------------------
+// ■ ファイル一覧
+// ------------------------
+async function loadList() {
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error();
+
+    const data = await res.json();
+    const select = document.getElementById("fileList");
+    select.innerHTML = "";
+
+    data.filter(f => f.type === "file").forEach(f => {
+      const opt = document.createElement("option");
+      opt.value = f.path;
+      opt.textContent = f.name;
+      select.appendChild(opt);
+    });
+
+  } catch {
+    alert("ファイル一覧取得失敗");
+  }
+}
+
+// ------------------------
+// ■ ファイル取得（raw）
+// ------------------------
+async function loadFile() {
+  const path = document.getElementById("fileList").value;
+
+  const url = `https://raw.githubusercontent.com/ryuubokusub1/stone_story_rpg/main/${path}`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error();
+
+    const text = await res.text();
+    document.getElementById("content").value = text;
+
+  } catch {
+    alert("ファイル取得失敗");
+  }
+}
+
+// ------------------------
+// ■ GitHub編集
+// ------------------------
+function OpenURL() {
+  const path = document.getElementById("fileList").value;
+  const url = `https://github.com/ryuubokusub1/stone_story_rpg/edit/main/${path}`;
+  window.open(url, '_blank');
+}
+
+// ------------------------
+// ■ コピー（汎用）
+// ------------------------
+function copyTextarea(btn){
+  let field = btn.nextElementSibling;
+
+  while (field && field.tagName !== "TEXTAREA") {
+    field = field.nextElementSibling;
+  }
+
+  if (!field) return;
+
+  navigator.clipboard.writeText(field.value).then(()=>{
+    btn.textContent = "コピーしました！";
+    setTimeout(()=> btn.textContent="コピー", 1200);
+  }).catch(()=>{
+    field.select();
+    document.execCommand("copy");
+  });
+}
+
+// ------------------------
+// ■ メモ自動保存（おすすめ）
+// ------------------------
+const memo = document.getElementById("memo");
+
+memo.value = localStorage.getItem("memo") || "";
+
+memo.addEventListener("input", () => {
+  localStorage.setItem("memo", memo.value);
+});
+
+// ------------------------
+loadList();
+</script>
+
+</body>
+</html>
