@@ -1,10 +1,18 @@
 [
   {
-    "display": "Fireball()",
-    "key": "fireball",
-    "definition": "敵に火属性ダメージを与える関数",
-    "tags": ["function", "magic", "attack"],
+    "display": "item.GetCooldown()",
+    "key": "item.GetCooldown()",
+    "definition": "指定されたアイテムのクールダウン時間を返す",
+    "tags": ["function", "native"],
     "type": "function",
-    "note": "消費MPが高い"
+    "note": "指定されたアイテムのクールダウン時間を返す"
+  },
+    {
+    "display": "AAC(a,b)",
+    "key": "AAC()",
+    "definition": "?time%3=0 \n  ",
+    "tags": ["function",  "attack"],
+    "type": "function",
+    "note": "AAC"
   }
 ]
