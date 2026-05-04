@@ -1,0 +1,10 @@
+func AAC(a,b)
+ ?time%3=0
+  equip R @a@
+  equip L @b@
+ :?time%3=1
+  equip R @a@
+  equip L moon
+ :
+  equip R moon
+  equip L @b@
