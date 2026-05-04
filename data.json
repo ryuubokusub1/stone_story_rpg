@@ -1,0 +1,10 @@
+[
+  {
+    "display": "Fireball()",
+    "key": "fireball",
+    "definition": "敵に火属性ダメージを与える関数",
+    "tags": ["function", "magic", "attack"],
+    "type": "function",
+    "note": "消費MPが高い"
+  }
+]
