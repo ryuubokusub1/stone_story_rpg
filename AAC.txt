@@ -1,10 +1,10 @@
+func soubi(a,b)
+  equip R @a@
+  equip L @b@
 func AAC(a,b)
- ?time%3=0
-  equip R @a@
-  equip L @b@
- :?time%3=1
-  equip R @a@
-  equip L moon
- :
-  equip R moon
-  equip L @b@
+  ?time%3=0
+    soubi(a,b)
+  :?time%3=1
+    soubi("moon",b)
+  :
+    soubi(a,"moon")
