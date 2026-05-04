@@ -1,0 +1,50 @@
+//==▼▼Info▼▼===
+//ArrayAAC(配列名) としてください。
+//ArrayAAC("配列名")←はNGです。
+//共通部分は既存のAACと重複する場合があるので、適宜削除してください。
+//===▲▲info▲▲===
+//▼AAC共通部分▼
+func soubi(a,b)
+  equip R @a@
+  equip L @b@
+func AAC(a,b)
+  ?time%3=0
+    soubi(a,b)
+  :?time%3=1
+    soubi("moon",b)
+  :
+    soubi(a,"moon")
+//▲AAC共通部分▲
+func ArrayAAC(arr)
+  aac(arr[0],arr[1])
+?player.name="流木"
+ var vs_poison=["ice sw 21/21 D",
+ "2ice sw2 21/21 D"]
+ var vs_vigor=["poison sw D 21/21",
+ "2poison sw2 D 21/21"]
+ var vs_aether=["vigor D sw D 21/21",
+ "2vigor sw2 21/21"]
+ var vs_fire=["aether sw 21/21 D",
+ "2aether sw2 21/21 D"]
+ var vs_ice=["fire sw 21/21 D",
+ "2fire 21/21 sw2 D"]
+ var dbf=["dI sw 21/21",
+ "vi dl 21/21 sw"]
+ var heal=["dl sw3 21/21",
+ "vi dl 21/21 sw"]
+:
+ var vs_poison=[＂ice di＂,
+ ＂ice socketed D＂]
+ var vs_vigor=[＂poison D sword＂,
+ ＂vs vigor＂]
+ var vs_aether=[＂vigor dl＂,
+ ＂heal＂]
+ var vs_fire=[＂aether D＂,
+ ＂aether D shiny＂]
+ var vs_ice=[＂vs ice＂,
+ ＂fire socketed df＂]
+ var dbf=["ice socketed di",
+ "fire socketed df"]
+ var heal=["heal","dl"]
+func Aaac(ar)
+ aac(ar［0］,ar［1］)
