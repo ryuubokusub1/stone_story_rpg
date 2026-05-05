@@ -1,0 +1,29 @@
+//===info===
+//abilityF(blade)のように、配列を定義しなくてもOK
+//引数:装備名（ベタ打ち）戻り値:boolean
+//使用例
+//?ability(hammer)
+// equip L mind
+////////////
+
+var hammer = ［＂heavy_hammer＂,＂heavy hammer＂,10］
+var bardiche=["bardiche","bardiche",22]
+var CDstart = -1
+func abilityF(s)
+ ?item.CanActivate()
+  ?type(s)=string
+   ?item.GetCooldown(s)<=0
+    equip @s@
+    activate R
+    return true
+  :
+   ?(item.GetCooldown(s［0］)<=0&
+   ^CDstart=-1)|CDstart+s[2]>totaltime
+    equip @s［1］@
+    activate R
+    ?CDstart=-1
+     CDstart=totaltime
+    return false
+   :
+    CDstart=-1
+    return true
