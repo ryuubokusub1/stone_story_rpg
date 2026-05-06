@@ -25,6 +25,10 @@ for i=0..btnData.Count()-1
  b.text = btnData[i][0]
  b.SetPressed(btnF)
 
+//ボタンを押した際の動作
+//nに対応するように動作を決める
+//Pressedのため、1fしか動かないことに注意
+//flgを切り替えるのがおすすめ
 func btnF(btn)
  var n = btns.IndexOf(btn)
  >`5,6,@n@
