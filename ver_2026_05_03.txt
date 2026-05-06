@@ -25,9 +25,8 @@ func ability(C,item)
  :
   return false
 var Btime = 0
-func bladeability(C)
- ?item.CanActivate()&CD(C)<=0
-  equip  @C@
+func bladea()
+  equip  blade
   Screen.Next()
   Btime++
  ?Btime > 25
@@ -101,9 +100,12 @@ func FoeEle()
      stoneCross()
    :
     LRAAC(＂repeat＂)
-    ?foe.count>4
-      ?!bladeability(＂blade＂) 
+   ?foe.count>4
+     ?!ability(＂blade＂,"blade")
+      blade()
+     :   
        activate voidweaver
+  
   :
    ?foe.distance>5
     ?!ability(＂bash＂,＂bash＂)
