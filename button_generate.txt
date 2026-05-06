@@ -1,40 +1,29 @@
-//btn生成
-
-//btn1,btn2……と生成したい数だけ追加
-var btn1=ui.AddButton()
-var btn2=ui.AddButton()
-//btn1,btn2……と生成したい数だけ追加
-var btnNm=［btn1,btn2］
-//表示内容を対応した数だけ入力
-var btnText=[a,b]
-//表示させたい座標を入力
-//既存のポーションやActivateのボタンに沿った座標になる
-//例えば、2,2等でも十分干渉しないものになるはず。
-var btnPos=［［1,2］,［2,2］］
-//btnF(btn)について
-//1fしか動かないため、何らかのフラグを動かすだけに留めるのが無難
+// ボタン定義 [テキスト, x, y]
+var btnData = [
+ ["a", 1, 2],
+ ["b", 2, 2]
+]
+var btns = []
 func btnw(a)
- ?btnPos[a][0]=1
+ ?btnData[a][1]=1
   return 8
  return 9
 func btnx(a)
  ?a=1
   return a
  return (a-1)*10
-for i=0..btnNm.Count()-1
- btnNm［i］.x=btnx(btnPos[i][0])
- btnNm［i］.y=1+5*(btnPos［i］［1］-1)
- btnNm［i］.w=btnw(i)
- btnNm［i］.h=5
- btnNm［i］.anchor=top_left
- btnNm［i］.dock=top_left
- btnNm［i］.text=btnText[i]
- btnNm［i］.SetPressed(btnF)
+for i=0..btnData.Count()-1
+ var b = ui.AddButton()
+ btns.Add(b)
+ b.x = btnx(btnData[i][1])
+ b.y = 1 + 5*(btnData[i][2]-1)
+ b.w = btnw(i)
+ b.h = 5
+ b.anchor = top_left
+ b.dock = top_left
+ b.text = btnData[i][0]
+ b.SetPressed(btnF)
 
-//以下、ボタンを押したときの内容
 func btnF(btn)
- var n=btnNm.IndexOf(btn)
- ?n=0
-  >`5,6,1
- :?n=1
-  >`5,6,2
+ var n = btns.IndexOf(btn)
+ >`5,6,@n@
