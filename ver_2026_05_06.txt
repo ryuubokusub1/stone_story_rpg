@@ -1,8 +1,8 @@
+//情報表示
 >`5,6,@loc.bestTime@/@totaltime@/@screen.i@
->`5,7,距離:@foe.distance@/数@foe.count@
+>`5,7,距離:@foe.distance@/数@foe.GetCount(10)@
 >`5,8,@condition@:@buffs.string@
 >`5,9,A:@btnAflg@#B:@btnBflg@#C:@btnCflg@
-
 import UI/MindstoneButton
 // ボタン定義 ［テキスト, x, y］
 var btnData = ［
@@ -11,17 +11,22 @@ var btnData = ［
  ［＂クロスボウ＂, 3, 3］,
 ］
 
+//ボタン定義
 var btns = ［］
+
+//ボタンの横幅を返す
 func btnw(a)
  ?btnData［a］［1］=1
   return 8
  return 9
 
+//ボタンのx座標を返す
 func btnx(a)
  ?a=1
   return a
  return (a-1)*10
 
+//ボタンを生成する式
 for i=0..btnData.Count()-1
  var b = ui.AddButton()
  btns.Add(b)
@@ -34,14 +39,21 @@ for i=0..btnData.Count()-1
  b.text = btnData［i］［0］
  b.SetPressed(btnF)
 
+//それぞれのボタンに紐づくflg
 var btnAflg=false
 var btnBflg=false
 var btnCflg=false
 
+//btnBのみ、タイマーを設置
+var btnBflgT=0
+
+//true・falseを逆にする関数
 func abekobe(a)
  ?a=true
   return false
  return true
+
+//ボタンを押された時、対応するflgを操作
 func btnF(btn)
  var n = btns.IndexOf(btn)
  ?n=0
@@ -51,9 +63,12 @@ func btnF(btn)
  :?n=2
   btnCflg=abekobe(btnCflg)
 
+//引数のアイテムを装備
 func soubi(a,b)
   equip R @a@
   equip L @b@
+
+//引数のアイテムでAAC
 func AAC(a,b)
   ?time%3=0
     soubi(a,b)
@@ -61,9 +76,12 @@ func AAC(a,b)
     soubi(＂moon＂,b)
   :
     soubi(a,＂moon＂)
+
+//引数の配列でAAC
 func ArrayAAC(arr)
   AAC(arr［0］,arr［1］)
 
+//プレイヤーの名前でAAC用配列を切り替え
 ?player.name=＂流木＂
  var vs_poison=［＂ice sw 21/21 D＂,
  ＂2ice sw2 21/21 D＂］
@@ -96,6 +114,7 @@ func ArrayAAC(arr)
 func Aaac(ar)
  aac(ar［0］,ar［1］)
  
+//火のクロスボウを使用しながら歩く
 var ctimer=0
 func FireCross()
  ?ctimer=0
@@ -109,10 +128,17 @@ func FireCross()
  :
   ctimer=0
 
+//ログ用変数
 var condition=＂＂
+
+//yeti用のタイマー
 var ytimer=0
+
+//引数のアイテムのクールダウンを返す
 func CD(item)
  return item.GetCooldown(item)
+
+//引数の杖をactivate
 func Tue_Act(a,b,n)
  ?item.CanActivate()
   ?armor>n
@@ -123,10 +149,15 @@ func Tue_Act(a,b,n)
      equip @a+＂ ＂+b@
     activate R
     return true
+  :
+   condition="アーマーが足りない"
  return false
 
+//発動中に時間を空けないといけない場合はここに記載
 var hammer = ［＂heavy_hammer＂,＂heavy hammer＂,10］
-var bardiche=［＂bardiche＂,＂bardiche＂,22］
+var bardiche=［＂bardiche＂,＂bardiche＂,23］
+
+//ハンマーやbardicheに対応したability関数
 var CDstart = -1
 func abilityF(s)
  ?item.CanActivate()
@@ -158,15 +189,18 @@ func Summon(str)
    return false
  return true
 
+//両手武器のDPSをあげる
 func LRAAC(str)
  equip @str@
  ?item.right.state=3
    equip qu
    equip @str@
 
+//属性を配列で定義
 var ele=［＂ice＂,＂fire＂,＂aether＂,
 ＂vigor＂,＂poison＂］
 
+//最適な盾を返そうとする関数
 func FoeEle()
  ?foe.distance>25
   return ＂compound＂
@@ -175,16 +209,20 @@ func FoeEle()
    return ele［(i+1)%5］+＂ A shield＂
  return ＂compound＂
 
+//六尺棒を使用する関数
 func qu()
  ?item.CanActivate()&
 ^item.GetCooldown(＂quarterstaff＂)<=0
   equip qu
   activate R
 ////////////////////////////////////
+
+//最初のアーマー稼ぎ
 ?loc.begin|loc.loop
  equip R compound
  equip L tri
 
+//blade発動のセット
 var btime=0
 var bflg=false
 ?bflg=true
@@ -198,6 +236,7 @@ var bflg=false
   Screen.ResetOffset()
   bflg=false
 
+//abilityの関数
 func ability(C,item)
  ?item.CanActivate()&CD(C)<=0
   equip R @item@
@@ -206,7 +245,7 @@ func ability(C,item)
  :
   return false
 
-var btnBflgT=0
+//ここから大まかな流れ
 ?Summon(＂aether＂)
  ?foe!boss
   ?foe.distance>20
@@ -216,15 +255,22 @@ var btnBflgT=0
     ?foe.distance>10
      soubi(FoeEle(),＂tri＂)
     :
+//画面1でさっさとbladeを使う（smite目的）
      ?screen.i=1
       ?item.GetCooldown(＂blade＂)<=0
        bflg=true
+//ボスが手前ならAAC そうでなければ貫通
       ?foe=unpush
        ArrayAAC(vs_ice)
       :
        LRAAC(＂fire D crossbow＂)
+//画面1以外で、ボス以外は複数なら貫通　単数なら連射
      ?foe.distance<=10
-      LRAAC(＂repeat＂)
+      ?foe.GetCount(7)!1
+       FireCross()
+      :
+       LRAAC(＂repeat＂)
+//ただし、btnBを押したら杖のAACに移行
       ?btnBflg=true
        Tue_Act(＂fire＂,＂staff＂,6)
        btnBflgT++
@@ -234,6 +280,7 @@ var btnBflgT=0
         btnBflg=false
         btnBflg=0
  :
+//ボスの場合は近づいて連射
   ?foe.distance>5
    equip L tri
    ?!abilityF(bash)
@@ -241,8 +288,10 @@ var btnBflgT=0
      ?!abilityF(quarterstaff)
       LRAAC(＂repeat＂)
   :
+//しっかり近づいたら短剣AAC
    ?foe=giant_ice
     ArrayAAC(vs_ice)
+//yeti戦はコピペ
    ?foe=yeti
     ?foe.distance>20
      qu()
@@ -256,12 +305,12 @@ var btnBflgT=0
      ?foe.armor>0
       equip R mask
       equip L ice dI sw 21
+//効率を上げる
       ?item.left.state=3
        equip L star
        equip L ice dI sw 21 
      :
       ytimer++
-
 ?ytimer>50
  ?ability(＂mask＂,＂mask＂)
   equip L dI sw 21/21
@@ -280,8 +329,12 @@ var btnBflgT=0
   activate R
  :
   ArrayAAC(vs_ice)
+
+//ytimer初期化
 ?foe=yeti&foe.hp<=0
  ytimer=0
+
+//btnAを押した時、デバフ杖をactivate
 ?btnAflg=true
  Tue_Act(＂poison＂,＂wand＂,6)
  Tue_Act(＂ice＂,＂wand＂,6)
