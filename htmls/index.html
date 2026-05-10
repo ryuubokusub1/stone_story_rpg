@@ -159,25 +159,11 @@ function checkLines(text) {
         } catch { alert("リスト取得失敗"); }
     }
 
-    async function loadFile() {
-        const path = document.getElementById("fileList").value;
-        const url = `https://raw.githubusercontent.com/ryuubokusub1/stone_story_rpg/main/${path}`;
-        try {
-            const res = await fetch(url);
-            const text = await res.text();
-            contentArea.value = text;
-            //editor.value = text; 下側には貼り付けない
-            handleInput();
-        } catch { alert("取得失敗"); }
-    }
 
     function OpenURL() {
         const path = document.getElementById("fileList").value;
         window.open(`https://github.com/ryuubokusub1/stone_story_rpg/edit/main/${path}`, '_blank');
     }
-
-
-
 
 
 function checkLines(text) {
@@ -219,11 +205,6 @@ function checkLines(text) {
         lineCounter.innerHTML = `<span class="ok">✅ All lines OK</span>`;
     }
 }
-
-
-
-
-
 
 
     loadList();
