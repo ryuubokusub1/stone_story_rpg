@@ -176,6 +176,56 @@ function checkLines(text) {
         window.open(`https://github.com/ryuubokusub1/stone_story_rpg/edit/main/${path}`, '_blank');
     }
 
+
+
+
+
+function checkLines(text) {
+    const lines = text.split('\n');
+    let errors = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const lineNum = i + 1;
+        
+        // --- 共通チェック (40列、全角) ---
+        const charCount = Array.from(line).length;
+        if (charCount > 40) errors.push(`L${lineNum}: 40列超過`);
+        if (line.includes('　')) errors.push(`L${lineNum}: 全角スペースあり`);
+
+        // --- ブロック構造のチェック ---
+        // 現在の行が ? : func for のいずれかを含んでいるか
+        const isBlockHeader = /[\?\:]|func\s|for\s/.test(line);
+        
+        if (isBlockHeader && i + 1 < lines.length) {
+            const currentIndent = line.match(/^ */)[0].length;
+            const nextLine = lines[i + 1];
+            
+            // 次の行が空行やコメントなら、さらにその次を探すべきですが
+            // 簡易的に「次の有効な行」をチェックするロジック
+            if (nextLine.trim().length > 0 && !nextLine.trim().startsWith('//')) {
+                const nextIndent = nextLine.match(/^ */)[0].length;
+                
+                if (nextIndent <= currentIndent) {
+                    errors.push(`L${lineNum + 1}: 字下げが不足しています`);
+                }
+            }
+        }
+    }
+
+    if (errors.length > 0) {
+        lineCounter.innerHTML = `⚠️ 構造エラー:<br>${errors.join('<br>')}`;
+    } else {
+        lineCounter.innerHTML = `<span class="ok">✅ All lines OK</span>`;
+    }
+}
+
+
+
+
+
+
+
     loadList();
 </script>
 
