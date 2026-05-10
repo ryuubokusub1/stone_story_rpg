@@ -1,120 +1,182 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>GitHub Viewer</title>
+    <meta charset="UTF-8">
+    <title>StoneScript Professional Editor</title>
+    <style>
+        body { background: #121212; color: #e0e0e0; font-family: 'Consolas', monospace; margin: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        /* エディタ部分 */
+        textarea { 
+            width: 100%; background: #000; color: #fff; 
+            border: 2px solid #333; border-radius: 4px;
+            padding: 10px; font-size: 16px; line-height: 1.4;
+            font-family: inherit;
+        }
+        #editor { height: 400px; }
+        #content { height: 150px; margin-bottom: 10px; display: none; }
 
-<style>
-body { font-family: sans-serif; margin: 10px; }
-textarea { width: 60ch; height: 300px; }
-</style>
+        /* 下部のステータスエリア */
+        .footer-status { 
+            display: flex; gap: 20px; background: #1e1e1e; 
+            padding: 15px; border-radius: 0 0 8px 8px; border: 2px solid #333; border-top: none;
+        }
+/* CSSの .status-box を少し調整 */
+.status-box { 
+    flex: 1; 
+    border-right: 1px solid #333; 
+    padding-right: 10px;
+    max-height: 150px; /* 必要に応じて高さを調整してください */
+    overflow-y: auto;  /* 中身が増えたらスクロールバーを出す */
+}
+        
+        #color-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .color-chip { display: inline-block; width: 18px; height: 18px; border: 1px solid #fff; vertical-align: middle; }
+        .color-item { font-size: 12px; display: flex; align-items: center; gap: 4px; background: #333; padding: 2px 6px; border-radius: 4px; }
+        
+        .github-box { margin-bottom: 20px; background: #1e1e1e; padding: 15px; border-radius: 8px; }
+        select { background: #333; color: #fff; border: 1px solid #555; padding: 5px; width: 200px; }
+        button { background: #444; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #666; }
+        button.primary { background: #007bff; }
+        
+        .warning { color: #ff6b6b; font-weight: bold; }
+        .ok { color: #00ff00; }
+        h3 { margin-top: 0; font-size: 14px; color: #888; text-transform: uppercase; }
+        #cursor-pos { font-size: 18px; color: #00ff00; font-weight: bold; }
+    </style>
 </head>
-
 <body>
 
-<h3>ファイル一覧</h3>
-<select id="fileList"></select>
-<button onclick="loadFile()">読み込み</button>
+<div class="container">
+    <h2>StoneScript Editor + GitHub</h2>
 
-<h3>内容</h3>
-<button onclick="OpenURL()">Commit用</button>
-<button onclick="copyTextarea(this)">コピー</button><br>
-<textarea id="content"></textarea>
+    <div class="github-box">
+        <div>
+            <label>File Select:</label>
+            <select id="fileList"></select>
+            <button class="primary" onclick="loadFile()">読み込み</button><br>
+        </div>
+        <div style="margin-top: 10px;">
+            <span style="display: inline-block; width: 12ch;"></span>
+            <button onclick="togglePreview()">Preview表示切替</button>
+            <span style="display: inline-block; width: 2ch;"></span>
+            <button onclick="OpenURL()">GitHubでCommit</button>
+        </div>
+    </div>
 
-<h3>メモ欄</h3>
-<button onclick="copyTextarea(this)">コピー</button><br>
-<textarea id="memo"></textarea>
+    <textarea id="content" placeholder="読み込まれたRawデータがここに表示されます"></textarea>
+    <textarea id="editor" placeholder="// ここにStoneScriptを記述してください..."></textarea>
+
+    <div class="footer-status">
+        <!-- 🚩 新設: カーソル位置表示 -->
+        <div class="status-box" style="flex: 0 0 150px;">
+            <h3>📍 Cursor</h3>
+            <div id="cursor-pos">行 1, 列 1</div>
+        </div>
+        
+        <div class="status-box">
+            <h3>📊 Line Status</h3>
+            <div id="line-counter">✅ All lines OK</div>
+        </div>
+        
+        <div class="status-box">
+            <h3>🎨 Color Preview</h3>
+            <div id="color-list"></div>
+        </div>
+    </div>
+</div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbzlamueSTT7Kt_6XONUZEQUsELRoW7-HBeXziJqE8yzwm0yHJLC3rCE9TvP7g-_NEWECA/exec";
+    const API = "https://script.google.com/macros/s/AKfycbzlamueSTT7Kt_6XONUZEQUsELRoW7-HBeXziJqE8yzwm0yHJLC3rCE9TvP7g-_NEWECA/exec";
+    const editor = document.getElementById('editor');
+    const colorList = document.getElementById('color-list');
+    const lineCounter = document.getElementById('line-counter');
+    const cursorPos = document.getElementById('cursor-pos');
+    const contentArea = document.getElementById('content');
 
-// ------------------------
-// ■ ファイル一覧
-// ------------------------
-async function loadList() {
-  try {
-    const res = await fetch(API);
-    if (!res.ok) throw new Error();
+    const colorMap = { "#sky": "#87CEEB", "#wood": "#8B4513" };
 
-    const data = await res.json();
-    const select = document.getElementById("fileList");
-    select.innerHTML = "";
+    // --- 新機能: カーソル位置の更新 ---
+    function updateCursorInfo() {
+        const text = editor.value;
+        const pos = editor.selectionStart;
+        const lines = text.substr(0, pos).split("\n");
+        const row = lines.length;
+        const col = Array.from(lines[lines.length - 1]).length + 1; // 全角考慮
+        cursorPos.innerText = `行 ${row}, 列 ${col}`;
+    }
 
-    data.filter(f => f.type === "file").forEach(f => {
-      const opt = document.createElement("option");
-      opt.value = f.path;
-      opt.textContent = f.name;
-      select.appendChild(opt);
+    function updateColors(text) {
+        const colorRegex = /#([a-fA-F0-9]{6}|[a-fA-F0-9]{3}|red|blue|cyan|yellow|green|white|black|orange|purple|wood)\b/g;
+        const rawMatches = text.match(colorRegex);
+        if (!rawMatches) { colorList.innerHTML = ""; return; }
+        const matches = [...new Set(rawMatches)];
+        colorList.innerHTML = matches.map(color => {
+            let cssColor = colorMap[color] || ( /^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/.test(color) ? color : color.replace('#', '') );
+            return `<div class="color-item"><span class="color-chip" style="background-color: ${cssColor};"></span><code>${color}</code></div>`;
+        }).join('');
+    }
+
+function checkLines(text) {
+    const lines = text.split('\n');
+    let errors = [];
+    lines.forEach((line, i) => {
+        const count = Array.from(line).length;
+        if (count > 40) errors.push(`L${i+1}: ${count}文字`);
     });
 
-  } catch {
-    alert("ファイル一覧取得失敗");
-  }
+    if (errors.length > 0) {
+        // joinを<br>にすることで、エラーごとに改行されます
+        lineCounter.innerHTML = `<span class="warning">⚠️ 40列超過:<br>${errors.join('<br>')}</span>`;
+    } else {
+        lineCounter.innerHTML = `<span class="ok">✅ All lines OK</span>`;
+    }
 }
 
-// ------------------------
-// ■ ファイル取得（raw）
-// ------------------------
-async function loadFile() {
-  const path = document.getElementById("fileList").value;
+    function handleInput() {
+        updateColors(editor.value);
+        checkLines(editor.value);
+        updateCursorInfo();
+    }
 
-  const url = `https://raw.githubusercontent.com/ryuubokusub1/stone_story_rpg/main/${path}`;
+    // 複数のイベントを監視してカーソル位置を逃さない
+    editor.addEventListener('input', handleInput);
+    editor.addEventListener('click', updateCursorInfo);
+    editor.addEventListener('keyup', updateCursorInfo);
 
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error();
+    function togglePreview() {
+        contentArea.style.display = (contentArea.style.display === 'none' || contentArea.style.display === '') ? 'block' : 'none';
+    }
 
-    const text = await res.text();
-    document.getElementById("content").value = text;
+    async function loadList() {
+        try {
+            const res = await fetch(API);
+            const data = await res.json();
+            const select = document.getElementById("fileList");
+            select.innerHTML = data.filter(f => f.type === "file").map(f => `<option value="${f.path}">${f.name}</option>`).join('');
+        } catch { alert("リスト取得失敗"); }
+    }
 
-  } catch {
-    alert("ファイル取得失敗");
-  }
-}
+    async function loadFile() {
+        const path = document.getElementById("fileList").value;
+        const url = `https://raw.githubusercontent.com/ryuubokusub1/stone_story_rpg/main/${path}`;
+        try {
+            const res = await fetch(url);
+            const text = await res.text();
+            contentArea.value = text;
+            //editor.value = text; 下側には貼り付けない
+            handleInput();
+        } catch { alert("取得失敗"); }
+    }
 
-// ------------------------
-// ■ GitHub編集
-// ------------------------
-function OpenURL() {
-  const path = document.getElementById("fileList").value;
-  const url = `https://github.com/ryuubokusub1/stone_story_rpg/edit/main/${path}`;
-  window.open(url, '_blank');
-}
+    function OpenURL() {
+        const path = document.getElementById("fileList").value;
+        window.open(`https://github.com/ryuubokusub1/stone_story_rpg/edit/main/${path}`, '_blank');
+    }
 
-// ------------------------
-// ■ コピー（汎用）
-// ------------------------
-function copyTextarea(btn){
-  let field = btn.nextElementSibling;
-
-  while (field && field.tagName !== "TEXTAREA") {
-    field = field.nextElementSibling;
-  }
-
-  if (!field) return;
-
-  navigator.clipboard.writeText(field.value).then(()=>{
-    btn.textContent = "コピーしました！";
-    setTimeout(()=> btn.textContent="コピー", 1200);
-  }).catch(()=>{
-    field.select();
-    document.execCommand("copy");
-  });
-}
-
-// ------------------------
-// ■ メモ自動保存（おすすめ）
-// ------------------------
-const memo = document.getElementById("memo");
-
-memo.value = localStorage.getItem("memo") || "";
-
-memo.addEventListener("input", () => {
-  localStorage.setItem("memo", memo.value);
-});
-
-// ------------------------
-loadList();
+    loadList();
 </script>
 
 </body>
