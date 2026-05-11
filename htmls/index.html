@@ -119,21 +119,6 @@
         }).join('');
     }
 
-function checkLines(text) {
-    const lines = text.split('\n');
-    let errors = [];
-    lines.forEach((line, i) => {
-        const count = Array.from(line).length;
-        if (count > 40) errors.push(`L${i+1}: ${count}文字`);
-    });
-
-    if (errors.length > 0) {
-        // joinを<br>にすることで、エラーごとに改行されます
-        lineCounter.innerHTML = `<span class="warning">⚠️ 40列超過:<br>${errors.join('<br>')}</span>`;
-    } else {
-        lineCounter.innerHTML = `<span class="ok">✅ All lines OK</span>`;
-    }
-}
 
     function handleInput() {
         updateColors(editor.value);
@@ -188,41 +173,45 @@ function checkLines(text) {
         const line = lines[i];
         const lineNum = i + 1;
         
-        // --- 共通チェック (40列、全角) ---
+        // --- 1. 基本チェック (40列、全角) ---
         const charCount = Array.from(line).length;
-        if (charCount > 40) errors.push(`L${lineNum}: 40列超過`);
-        if (line.includes('　')) errors.push(`L${lineNum}: 全角スペースあり`);
+        if (charCount > 40) {
+            errors.push(`<span class="warning">L${lineNum}: 40列超過(${charCount}字)</span>`);
+        }
+        if (line.includes('　')) {
+            errors.push(`<span class="warning">L${lineNum}: 全角スペースあり</span>`);
+        }
 
-        // --- ブロック構造のチェック ---
-        // 現在の行が ? : func for のいずれかを含んでいるか
+        // --- 2. ブロック構造のチェック ---
+        // 行末、または末尾のコメント前に ?, :, func, for があるか
         const isBlockHeader = /[\?\:]|func\s|for\s/.test(line);
         
         if (isBlockHeader && i + 1 < lines.length) {
             const currentIndent = line.match(/^ */)[0].length;
-            const nextLine = lines[i + 1];
             
-            // 次の行が空行やコメントなら、さらにその次を探すべきですが
-            // 簡易的に「次の有効な行」をチェックするロジック
-            if (nextLine.trim().length > 0 && !nextLine.trim().startsWith('//')) {
-                const nextIndent = nextLine.match(/^ */)[0].length;
-                
-                if (nextIndent <= currentIndent) {
-                    errors.push(`L${lineNum + 1}: 字下げが不足しています`);
+            // 次の行から「空行でもコメントでもない行」を探す
+            let nextLineIndex = i + 1;
+            while (nextLineIndex < lines.length) {
+                const nextLine = lines[nextLineIndex];
+                if (nextLine.trim().length > 0 && !nextLine.trim().startsWith('//')) {
+                    const nextIndent = nextLine.match(/^ */)[0].length;
+                    
+                    if (nextIndent <= currentIndent) {
+                        errors.push(`<span class="warning">L${nextLineIndex + 1}: 字下げ不足</span>`);
+                    }
+                    break; // 有効な行をチェックしたら終了
                 }
+                nextLineIndex++;
             }
         }
     }
 
     if (errors.length > 0) {
-        lineCounter.innerHTML = `⚠️ 構造エラー:<br>${errors.join('<br>')}`;
+        lineCounter.innerHTML = `⚠️ 要確認:<br>${errors.join('<br>')}`;
     } else {
         lineCounter.innerHTML = `<span class="ok">✅ All lines OK</span>`;
     }
 }
-
-
-
-
 
 
 
