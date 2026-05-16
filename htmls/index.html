@@ -2,89 +2,153 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>StoneScript Professional Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StoneScript Editor</title>
     <style>
-        body { background: #121212; color: #e0e0e0; font-family: 'Consolas', monospace; margin: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        
-        /* エディタ部分 */
-        textarea { 
-            width: 100%; background: #000; color: #fff; 
-            border: 2px solid #333; border-radius: 4px;
-            padding: 10px; font-size: 16px; line-height: 1.4;
-            font-family: inherit;
-        }
-        #editor { height: 400px; }
-        #content { height: 150px; margin-bottom: 10px; display: none; }
+        * { box-sizing: border-box; }
 
-        /* 下部のステータスエリア */
-        .footer-status { 
-            display: flex; gap: 20px; background: #1e1e1e; 
-            padding: 15px; border-radius: 0 0 8px 8px; border: 2px solid #333; border-top: none;
+        body { 
+            background: #121212; color: #e0e0e0; 
+            font-family: 'Consolas', 'Courier New', monospace; 
+            margin: 0; padding: 10px;
+            display: flex; justify-content: center;
         }
-/* CSSの .status-box を少し調整 */
-.status-box { 
-    flex: 1; 
-    border-right: 1px solid #333; 
-    padding-right: 10px;
-    max-height: 150px; /* 必要に応じて高さを調整してください */
-    overflow-y: auto;  /* 中身が増えたらスクロールバーを出す */
-}
+
+        .container { 
+            width: 100%;
+            max-width: 1000px;
+        }
         
-        #color-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
-        .color-chip { display: inline-block; width: 18px; height: 18px; border: 1px solid #fff; vertical-align: middle; }
-        .color-item { font-size: 12px; display: flex; align-items: center; gap: 4px; background: #333; padding: 2px 6px; border-radius: 4px; }
+        .github-box { 
+            margin-bottom: 15px; background: #1e1e1e; 
+            padding: 12px; border-radius: 8px; 
+            border: 1px solid #333;
+        }
+        .github-box div { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .github-box select { background: #333; color: #fff; border: 1px solid #555; padding: 8px; flex: 1; min-width: 150px; border-radius: 4px; font-size: 14px; }
+        .github-box button { background: #444; color: white; border: none; padding: 10px 14px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 14px; }
+        .github-box button.primary { background: #007bff; }
+
+        /* レイアウト */
+        .editor-main-layout {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        textarea { 
+            background: #000; color: #fff; 
+            border: 2px solid #333; border-radius: 4px;
+            padding: 12px; font-size: 16px; line-height: 1.4;
+            font-family: inherit;
+            outline: none;
+        }
+        textarea:focus { border-color: #007bff; }
         
-        .github-box { margin-bottom: 20px; background: #1e1e1e; padding: 15px; border-radius: 8px; }
-        select { background: #333; color: #fff; border: 1px solid #555; padding: 5px; width: 200px; }
-        button { background: #444; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
-        button:hover { background: #666; }
-        button.primary { background: #007bff; }
-        
-        .warning { color: #ff6b6b; font-weight: bold; }
-        .ok { color: #00ff00; }
-        h3 { margin-top: 0; font-size: 14px; color: #888; text-transform: uppercase; }
-        #cursor-pos { font-size: 18px; color: #00ff00; font-weight: bold; }
+        /* 🚩 PC・横画面時の基本高さ */
+        #editor { 
+            flex: 1; 
+            height: 65vh; 
+            min-height: 400px;
+        }
+
+        /* Rawデータエリア */
+        #content { width: 100%; height: 120px; margin-bottom: 10px; display: none; }
+
+        /* 候補エリア */
+        #suggestion-area {
+            width: 220px;
+            background: #1e1e1e;
+            border: 2px solid #333;
+            border-radius: 4px;
+            overflow-y: auto;
+        }
+        .suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #2a2a2a; }
+        .suggestion-item:hover { background: #333; }
+        .sugg-label { color: #00ff00; font-weight: bold; font-size: 13px; display: block; }
+        .sugg-desc { color: #888; font-size: 10px; line-height: 1.2; display: block; margin-top: 2px; }
+
+        /* ステータスバー */
+        .status { 
+            display: flex; flex-wrap: wrap; gap: 10px; background: #1e1e1e; 
+            padding: 12px; border-radius: 0 0 8px 8px; border: 2px solid #333; border-top: none;
+        }
+        .status-box { flex: 1; min-width: 130px; border-right: 1px solid #333; padding-right: 8px; }
+        .status-box:last-child { border-right: none; }
+        h3 { margin: 0 0 4px 0; font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        #cursor-pos { font-size: 16px; color: #00ff00; font-weight: bold; }
+        #color-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+        .color-item { font-size: 10px; display: flex; align-items: center; gap: 4px; background: #2a2a2a; padding: 2px 5px; border-radius: 3px; }
+        .color-chip { width: 12px; height: 12px; border: 1px solid #fff; }
+        .warning { color: #ff6b6b; font-size: 12px; font-weight: bold; display: block; }
+        .ok { color: #00ff00; font-size: 12px; }
+
+        /* 📱 スマホ縦画面：エディタを最優先 */
+        @media (max-width: 600px) and (orientation: portrait) {
+            .editor-main-layout { flex-direction: column; gap: 5px; }
+            
+            #editor { 
+                width: 100%; 
+                height: 60vh; /* 🚩 Raw枠より圧倒的に広く確保 */
+                min-height: 350px; 
+            }
+            
+            #suggestion-area { 
+                width: 100%; 
+                height: 90px; /* 🚩 候補はスリム化して邪魔しないように */
+            }
+            
+            .github-box div { flex-direction: column; align-items: stretch; }
+            .status-box { border-right: none; border-bottom: 1px solid #222; padding-bottom: 8px; width: 100%; }
+        }
+
+        /* 📱 スマホ横画面：左右並びで高さを節約 */
+        @media (max-height: 500px) and (orientation: landscape) {
+            #editor { height: 50vh; min-height: 150px; }
+            #suggestion-area { width: 180px; height: auto; }
+            h2 { font-size: 16px; margin: 5px 0; }
+            .github-box { padding: 8px; margin-bottom: 8px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>StoneScript Editor + GitHub</h2>
+    <h2 style="margin-top: 0; font-size: 1.2rem;">StoneScript Editor</h2>
 
     <div class="github-box">
         <div>
-            <label>File Select:</label>
             <select id="fileList"></select>
-            <button class="primary" onclick="loadFile()">読み込み</button><br>
-        </div>
-        <div style="margin-top: 10px;">
-            <span style="display: inline-block; width: 12ch;"></span>
-            <button onclick="togglePreview()">Preview表示切替</button>
-            <span style="display: inline-block; width: 2ch;"></span>
-            <button onclick="OpenURL()">GitHubでCommit</button>
+            <button class="primary" onclick="loadFile()">読み込み</button>
+            <button onclick="togglePreview()">表示切替</button>
+            <button onclick="OpenURL()">GitHub</button>
         </div>
     </div>
 
-    <textarea id="content" placeholder="読み込まれたRawデータがここに表示されます"></textarea>
-    <textarea id="editor" placeholder="// ここにStoneScriptを記述してください..."></textarea>
+    <!-- Rawデータ保存用（非表示可） -->
+    <textarea id="content" placeholder="ここにRawデータが読み込まれます"></textarea>
 
-    <div class="footer-status">
-        <!-- 🚩 新設: カーソル位置表示 -->
-        <div class="status-box" style="flex: 0 0 150px;">
+    <div class="status">
+        <div class="status-box" style="flex: 0 0 120px;">
             <h3>📍 Cursor</h3>
             <div id="cursor-pos">行 1, 列 1</div>
         </div>
-        
         <div class="status-box">
-            <h3>📊 Line Status</h3>
-            <div id="line-counter">✅ All lines OK</div>
+            <h3>📊 Status</h3>
+            <div id="line-counter"><span class="ok">✅ OK</span></div>
         </div>
-        
         <div class="status-box">
-            <h3>🎨 Color Preview</h3>
+            <h3>🎨 Colors</h3>
             <div id="color-list"></div>
         </div>
+    </div>
+
+    <div class="editor-main-layout">
+        <div id="suggestion-area">
+            <div style="padding: 10px; font-size: 11px; color: #666; text-align: center;">入力候補</div>
+        </div>
+
+        <textarea id="editor" placeholder="// ここに入力してください..." spellcheck="false"></textarea>
     </div>
 </div>
 
@@ -95,18 +159,507 @@
     const lineCounter = document.getElementById('line-counter');
     const cursorPos = document.getElementById('cursor-pos');
     const contentArea = document.getElementById('content');
+    const suggestionArea = document.getElementById('suggestion-area');
 
     const colorMap = { "#sky": "#87CEEB", "#wood": "#8B4513" };
+//    let dictionary = [
+//        { term: "item.GetCooldown(str)", insert: "item.GetCooldown($1)", label: "item.GetCooldown", description: "現在のエリアが、伝説のクエストやカスタムクエストなどであればtrue それ以外はfalse" },
+//        { term: "func", insert: "func ", label: "func [name]", description: "関数定義" },
+//        { term: "?", insert: "?", label: "? [cond]", description: "条件分岐" },
+//        { term: ":", insert: ":", label: ":", description: "else" },
+//        { term: "//", insert: "//", label: "//", description: "1行コメント" },
+//        { term: "#wood", insert: "#wood", label: "#wood", description: "木の色" }
+//    ];
+let dictionary=[
+{ term: "term", insert: "insert", label:"label", description: "description"},
+{ term: "-", insert: "-", label:"-", description: "2つの数値や変数を減算する。 "},
+{ term: "--", insert: "--", label:"--", description: "変数の値を1減少させる。 "},
+{ term: ":", insert: ":", label:":", description: "else文"},
+{ term: ":?", insert: ":?", label:":?", description: "else-if文"},
+{ term: "!", insert: "!", label:"!", description: "等しくない値か、文字列に含まれていない値を比較する。 "},
+{ term: "!", insert: "!", label:"!", description: "否定。真偽値を反転させる。 "},
+{ term: "?", insert: "?", label:"?", description: "if文"},
+{ term: "(", insert: "($1)", label:"(  )", description: "演算の優先順位を指定できる。カッコ内を先に計算する。 "},
+{ term: "[", insert: "[$1]", label:"a[integer] ", description: "指定した位置の値を読み取る。 "},
+{ term: "*/", insert: "*/", label:"*/", description: "ブロックコメント-終了"},
+{ term: "*/", insert: "*/", label:"*/", description: "2つの数値や変数を乗算する。 "},
+{ term: "/", insert: "/", label:"/", description: "1つの数値や変数をもう1つの数値や変数で除算する。どちらも整数の場合、少数部分は切り捨てられる。 "},
+{ term: "/*", insert: "/*", label:"/*", description: "ブロックコメント-開始"},
+{ term: "//", insert: "//", label:"//", description: "1行コメント"},
+{ term: "//▲▲", insert: "//▲▲", label:"//▲▲", description: "ここまでコメント"},
+{ term: "//▼▼", insert: "//▼▼", label:"//▼▼", description: "ここからコメント"},
+{ term: "&", insert: "&", label:"&", description: "論理積(AND)演算子。 "},
+{ term: "#blue ", insert: "#blue ", label:"#blue ", description: "色を表す定数。色は #rrggbb のほかに、定数で設定することもできる。虹色は'rainFF'を使用し、最後の2文字(FF)で明るさを指定する。 "},
+{ term: "#cyan ", insert: "#cyan ", label:"#cyan ", description: "色を表す定数。色は #rrggbb のほかに、定数で設定することもできる。虹色は'rainFF'を使用し、最後の2文字(FF)で明るさを指定する。 "},
+{ term: "#green ", insert: "#green ", label:"#green ", description: "色を表す定数。色は #rrggbb のほかに、定数で設定することもできる。虹色は'rainFF'を使用し、最後の2文字(FF)で明るさを指定する。 "},
+{ term: "#rainFF ", insert: "#rainFF ", label:"#rainFF ", description: "色を表す定数。色は #rrggbb のほかに、定数で設定することもできる。虹色は'rainFF'を使用し、最後の2文字(FF)で明るさを指定する。 "},
+{ term: "#red ", insert: "#red ", label:"#red ", description: "色を表す定数。色は #rrggbb のほかに、定数で設定することもできる。虹色は'rainFF'を使用し、最後の2文字(FF)で明るさを指定する。 "},
+{ term: "#white ", insert: "#white ", label:"#white ", description: "色を表す定数。色は #rrggbb のほかに、定数で設定することもできる。虹色は'rainFF'を使用し、最後の2文字(FF)で明るさを指定する。 "},
+{ term: "#yellow ", insert: "#yellow ", label:"#yellow ", description: "色を表す定数。色は #rrggbb のほかに、定数で設定することもできる。虹色は'rainFF'を使用し、最後の2文字(FF)で明るさを指定する。 "},
+{ term: "% ", insert: "% ", label:"% ", description: "余剰演算。割り算の余りを返す。 "},
+{ term: "^", insert: "^", label:"^", description: "1つ前の行と連続する"},
+{ term: "+", insert: "+", label:"+", description: "2つの数値や変数を加算する。 "},
+{ term: "++", insert: "++", label:"++", description: "変数の値を1増加させる。 "},
+{ term: "<", insert: "<", label:"<", description: "値が小さいかを比較する。 "},
+{ term: "<= ", insert: "<= ", label:"<= ", description: "値が大きいか、等しいかを比較する。'<'と'='を組み合わせて一つの比較とする。 "},
+{ term: "=", insert: "=", label:"=", description: "等しい値か、文字列が含まれている値を比較する。 "},
+{ term: ">", insert: ">", label:"> (str) ", description: "画面の上部に文字列を表示する。 "},
+{ term: ">", insert: ">", label:">", description: "値が大きいかを比較する。エリアの難易度、敵の数、体力などと組み合わせて使用できる。 "},
+{ term: ">( ", insert: ">( ", label:">(abcd ", description: "プレイヤーの表情をカスタムして表示する。ビッグヘッドが必要。 "},
+{ term: ">@", insert: ">@$1@", label:"> @varName@ ", description: "変数の値を挿入した文字列を表示する。表示には複数の変数を挿入でき、変数名を'@'で囲む。 "},
+{ term: ">`", insert: ">`", label:">`X,Y,[#rrggbb,](str) ", description: "画面の左上隅を基準にした高度な表示。 色は任意。"},
+{ term: ">= ", insert: ">= ", label:">= ", description: "値が大きいか、等しいかを比較する。'>'と'='を組み合わせて一つの比較とする。 "},
+{ term: ">c ", insert: ">c ", label:">cX,Y,[#rrggbb,](str) ", description: "画面の中央を基準にした高度な表示。 >` と似ている。色は任意。 "},
+{ term: ">f ", insert: ">f ", label:">fX,Y,[#rrggbb,](str) ", description: "ターゲットの敵の頭の位置を基準にした高度な表示。 色は任意。"},
+{ term: ">h ", insert: ">h ", label:">hX,Y,[#rrggbb,](str) ", description: " >o とほぼ同じだが、ビッグヘッドと同じレイヤーに描画する。帽子などアクセサリーに最適。色は任意。 "},
+{ term: ">o ", insert: ">o ", label:">oX,Y,[#rrggbb,](str)", description: "プレイヤーの位置を基準にした高度な表示。XとYは座標のオフセット。 #rrggbb はテキストの色を16進数で表記したもの。色は任意。"},
+{ term: "|", insert: "|", label:"|", description: "論理和(OR)演算子。複雑な式に'&'と'|'が混在している場合、'&'が最初に評価される。 "},
+{ term: "absoluteX ", insert: "absoluteX ", label:"component.absoluteX ", description: "スクリーン全体を基準にしたコンポーネントの相対位置。 "},
+{ term: "absoluteY ", insert: "absoluteY ", label:"component.absoluteY ", description: "スクリーン全体を基準にしたコンポーネントの相対位置。 "},
+{ term: "activate ", insert: "activate ", label:"activate (ability) ", description: "アイテムの能力を発動する。 "},
+{ term: "ADD", insert: "ADD", label:"ADD", description: "追加_コメント記載用"},
+{ term: "Add(", insert: "Add($1)", label:"b.Add(num) ", description: "BigNumberに数値を加算する(+) 戻り値：itself"},
+{ term: "Add(", insert: "Add($1)", label:"b.Add(BigNumber) ", description: "BigNumberに数値を加算する(+) 戻り値：itself"},
+{ term: "Add(", insert: "Add($1) ", label:"a.Add(value) ", description: "新しい値/オブジェクトを配列の末尾に追加する。 "},
+{ term: "Add( ", insert: "Add($1) ", label:"panel.Add(Component) ", description: "パネルにコンポーネントを追加する。追加されたコンポーネントはパネルの子になり、パネルはその親になる。コンポーネントは追加された順に描画する。任意の整数パラメータを指定することで、特定の順序に挿入することもできる。指定されていない場合、パネルの最後の子要素として追加される。すでにパネルの子であるコンポーネントの描画順序を変更するためにも使用できる。 "},
+{ term: "Add( ", insert: "Add($1) ", label:"panel.Add(Component, int) ", description: "パネルにコンポーネントを追加する。追加されたコンポーネントはパネルの子になり、パネルはその親になる。コンポーネントは追加された順に描画する。任意の整数パラメータを指定することで、特定の順序に挿入することもできる。指定されていない場合、パネルの最後の子要素として追加される。すでにパネルの子であるコンポーネントの描画順序を変更するためにも使用できる。 "},
+{ term: "AddLayer( ", insert: "AddLayer($1) ", label:"anim.AddLayer(string) ", description: "現在のアニメーションの上に、新しいアスキーアートのレイヤーを追加する。アニメーションが再生する(またはanim.frameでフレームが変更する)と、全てのレイヤーが同期される。各レイヤーには色や中心点の調整などのプロパティがある。アニメーションレイヤーには、複雑なアスキーアートのパフォーマンスやコードの品質の向上という利点がある。アニメーションがリサイクルされると、すべてのレイヤーが同時にクリーンアップされる。 "},
+{ term: "ai.enabled ", insert: "ai.enabled ", label:"ai.enabled ", description: "AIが有効であれば真、無効であれば偽 "},
+{ term: "ai.idle ", insert: "ai.idle ", label:"ai.idle ", description: "プレイヤーが待機状態であれば真になる "},
+{ term: "ai.paused ", insert: "ai.paused ", label:"ai.paused ", description: "AIが一時的に停止していれば真になる "},
+{ term: "ai.walking ", insert: "ai.walking ", label:"ai.walking ", description: "プレイヤーが移動中であれば真 "},
+{ term: "ambient ", insert: "ambient ", label:"ambient ", description: "再生中の環境音のIDをカンマ区切りで返す。 "},
+{ term: "ambient.Add(", insert: "ambient.Add($1)", label:"ambient.Add(str) ", description: "指定されたIDの環境音レイヤーを追加する。最大4レイヤーまで追加でき、5つ目を追加すると最も古いレイヤーが削除される。 "},
+{ term: "ambient.Stop() ", insert: "ambient.Stop() ", label:"ambient.Stop() ", description: "再生中の環境音をすべてクリアする。 "},
+{ term: "anchor ", insert: "anchor ", label:"component.anchor ", description: "コンポーネントの内部の配置基準を表す自動レイアウトプロパティ。これは、自身に対してどのように配置するかをUIシステムに指示する。デフォルト値は center_center 。使用可能値：'top_left' 'top_center' 'top_right' 'center_left' 'center_center' 'center_right' 'bottom_left' 'bottom_center' 'bottom_right' "},
+{ term: "armor ", insert: "armor ", label:"armor ", description: "プレイヤーの現在のアーマー値(小数点以下は切り捨て) "},
+{ term: "armor.f ", insert: "armor.f ", label:"armor.f ", description: "プレイヤーの現在のアーマー値の小数部分 "},
+{ term: "ax ", insert: "ax ", label:"component.ax ", description: "anchorのX部分。使用可能値：'left' 'center' 'right' "},
+{ term: "ay ", insert: "ay ", label:"component.ay ", description: "anchorのY部分。使用可能値：'top' 'center' 'bottom' "},
+{ term: "bcolor ", insert: "bcolor ", label:"button.bcolor ", description: "ボタンの枠の色を設定する。色はRGB16進数で指定する。"},
+{ term: "bighead ", insert: "bighead ", label:"bighead ", description: "プレイヤーがビッグヘッド(月時計の石)を有効にしていれば真 "},
+{ term: "blend ", insert: "blend ", label:"canvas.blend ", description: "キャンバスのブレンドモード。前景と背景の要素の合成方法を設定する。デフォルトは opaque 。使用可能値：'Opaque'(不透明) 'Multiply'(乗算) 'Divide'(除算) 'Add'(加算) 'Subtract'(減算) "},
+{ term: "brew ", insert: "brew ", label:"brew (ingredients) ", description: "ポーションボトルに指定された調合の材料を補充する。実行の開始、time 0にのみ実行される。材料には石ころ(stone)、木の枝(wood)、タール(tar)、銅の塊(bronze)が含まれ、+で区切る必要がある。材料名は英語または選択した言語で指定できる "},
+{ term: "buffs.count ", insert: "buffs.count ", label:"buffs.count ", description: "プレイヤーにかかっているバフ(プラス効果)の数。 "},
+{ term: "buffs.GetCount( ", insert: "buffs.GetCount($1)", label:"buffs.GetCount(str) ", description: "プレイヤーの特定のバフの数。 "},
+{ term: "buffs.GetTime(", insert: "buffs.GetTime($1)", label:"buffs.GetTime(str) ", description: "プレイヤーの特定のバフの持続時間。 "},
+{ term: "buffs.oldest", insert: "buffs.oldest", label:"buffs.oldest", description: "プレイヤーにかかっている最も古いバフのID"},
+{ term: "buffs.string ", insert: "buffs.string ", label:"buffs.string ", description: "プレイヤーのバフに関する詳細な情報。 "},
+{ term: "children ", insert: "children ", label:"panel.children ", description: "panel.Add()でそのパネルに追加された子コンポーネントが格納された配列。"},
+{ term: "Clear()", insert: "Clear()", label:"a.Clear() ", description: "配列からすべての要素を削除し、空にする。配列を[]で再宣言するよりも効率的。 "},
+{ term: "Clear() ", insert: "Clear() ", label:"panel.Clear() ", description: "パネルに追加されたすべてのUI要素を削除する。削除された要素はUIシステムに戻され、ui.Add_()の呼び出しで再利用される。バグを避けるために、削除された要素への変数参照はすべてnullにするか、再割り当てする必要がある。 "},
+{ term: "clip ", insert: "clip ", label:"panel.clip ", description: "パネルの範囲外で、子コンポーネントの描画を制限するかどうかを示す。真の場合、子コンポーネントが範囲外にはみ出した部分は描画されない。 "},
+{ term: "color ", insert: "color ", label:"panel.color ", description: "パネルの枠の色を設定する。色はRGB16進数で指定する。"},
+{ term: "color ", insert: "color ", label:"anim.color ", description: "アニメーションの色を設定する。色はRGB16進数で指定する。"},
+{ term: "Contains(", insert: "Contains($1)", label:"a.Contains(value) ", description: "指定された値が配列内に存在するかどうかを判断する。見つかれば真を、見つからなければ偽を返す。 "},
+{ term: "Count() ", insert: "Count() ", label:"a.Count() ", description: "配列の要素の数を返す。 "},
+{ term: "debuffs.count ", insert: "debuffs.count ", label:"debuffs.count ", description: "プレイヤーにかかっているデバフ(マイナス効果)の数。 "},
+{ term: "debuffs.GetCount(", insert: "debuffs.GetCount($1)", label:"debuffs.GetCount(str) ", description: "プレイヤーの特定のデバフの数。 "},
+{ term: "debuffs.GetTime(", insert: "debuffs.GetTime($1)", label:"debuffs.GetTime(str) ", description: "プレイヤーの特定のデバフの持続時間。 "},
+{ term: "debuffs.oldest ", insert: "debuffs.oldest ", label:"debuffs.oldest ", description: "プレイヤーにかかっている最も古いデバフのID。 "},
+{ term: "debuffs.string ", insert: "debuffs.string ", label:"debuffs.string ", description: "プレイヤーのデバフに関する詳細な情報。 "},
+{ term: "DEL", insert: "DEL", label:"DEL", description: "削除_コメント記載用"},
+{ term: "disable abilities ", insert: "disable abilities ", label:"disable abilities ", description: "ポーションや武器の能力発動を無効化する。また、HUDボタンが灰色になる。 "},
+{ term: "disable banner ", insert: "disable banner ", label:"disable banner ", description: "エリアの始まりと終わりにエリア名が表示されるバナー演出を無効化する。 "},
+{ term: "disable hud (", insert: "disable hud ($1)", label:"disable hud (opts) ", description: "ゲーム内のUI要素を非表示および無効化する。任意のパラメータを受け入れ、無効にする要素を指定できる。p = プレイヤーの体力とデバフ f = 敵の体力とデバフ a = 能力使用ボタン r = 資源 b = バナー u = 四次元ベルト "},
+{ term: "disable loadout input ", insert: "disable loadout input ", label:"disable loadout input ", description: "武器のロードアウトをキー入力での保存や呼び出しを無効化する。 "},
+{ term: "disable loadout print ", insert: "disable loadout print ", label:"disable loadout print ", description: "ロードアウトが呼び出された時に表示されるメッセージを非表示にする。 "},
+{ term: "disable npcDialog ", insert: "disable npcDialog ", label:"disable npcDialog ", description: "NPCの吹き出しを非表示にして会話をスキップする。 "},
+{ term: "disable pause ", insert: "disable pause ", label:"disable pause ", description: "ポーズボタンのUIを非表示にする。[P]キーでのポーズは利用可能。 "},
+{ term: "disable player ", insert: "disable player ", label:"disable player ", description: "プレイヤーを非表示にする。戦闘には影響しない、見た目だけのもの。 "},
+{ term: "Div(", insert: "Div($1)", label:"b.Div(num) ", description: "BigNumberを数値で除算する(/) 戻り値：itself"},
+{ term: "Div(", insert: "Div($1)", label:"b.Div(BigNumber) ", description: "BigNumberを数値で除算する(/) 戻り値：itself"},
+{ term: "dock ", insert: "dock ", label:"component.dock ", description: "anchorに似た自動レイアウトプロパティ。ただし、dockは外部の配置基準、親コンテナ内でどのように配置するかを表す。よくわからない場合は、anchorとdockに同じ値を使用すること。 "},
+{ term: "draw.Bg(", insert: "draw.Bg($1)", label:"draw.Bg(x, y, color) ", description: "画面上の指定した位置の背景色を設定する。 "},
+{ term: "draw.Bg(", insert: "draw.Bg($1)", label:"draw.Bg(x, y, color, w, h) ", description: "画面上の指定した範囲の背景色を設定する。 "},
+{ term: "draw.Box(", insert: "draw.Box($1)", label:"draw.Box(x, y, w, h, color, style) ", description: "指定した位置と範囲の四角形を描画する。四角形の境界線は色とスタイル番号で定義される。スタイル番号がマイナスになるとボックスの内側が透明になる。警告 - 現時点では、高度な表示は常にボックスの上に描画される。 "},
+{ term: "draw.Clear() ", insert: "draw.Clear() ", label:"draw.Clear() ", description: "画面全体をクリアする。 "},
+{ term: "draw.GetSymbol(", insert: "draw.GetSymbol($1)", label:"draw.GetSymbol(x, y) ", description: "指定した位置(x,y)の文字を取得する。 "},
+{ term: "draw.Player(", insert: "draw.Player($1)", label:"draw.Player(x,y) ", description: "指定した位置に、プレイヤーキャラクターを装備とアドオンを含めて描画する。任意でx,yのオフセット値を指定できる。絶対位置に描画する場合は、screen名前空間を参照して、プレイヤーのローカル位置から画面位置に変換するオフセットを導出する。 "},
+{ term: "draw.Player() ", insert: "draw.Player() ", label:"draw.Player() ", description: "指定した位置に、プレイヤーキャラクターを装備とアドオンを含めて描画する。任意でx,yのオフセット値を指定できる。絶対位置に描画する場合は、screen名前空間を参照して、プレイヤーのローカル位置から画面位置に変換するオフセットを導出する。 "},
+{ term: "duration ", insert: "duration ", label:"anim.duration ", description: "アニメーションの長さをフレーム単位で指定する。 "},
+{ term: "dx ", insert: "dx ", label:"component.dx ", description: "dockのX部分。使用可能値：'left' 'center' 'right' "},
+{ term: "dy ", insert: "dy ", label:"component.dy ", description: "dockのY部分。使用可能値：'top' 'center' 'bottom' "},
+{ term: "Emplace(", insert: "Emplace($1) ", label:"a.Emplace(integer, value) ", description: "指定された位置の値を新しい値に置き換える。 "},
+{ term: "enable abilities ", insert: "enable abilities ", label:"enable abilities ", description: " disable abilities によって無効にされた能力の発動を有効化する。 "},
+{ term: "enable banner ", insert: "enable banner ", label:"enable banner ", description: "エリア名が表示されるバナー演出を有効化する。 "},
+{ term: "enable hud (", insert: "enable hud ($1)", label:"enable hud (opts) ", description: " disable hud コマンドによって非表示にされたUIを表示する。 任意のパラメータを受け入れ、無効にする要素を指定できる。p = プレイヤーの体力とデバフ f = 敵の体力とデバフ a = 能力使用ボタン r = 資源 b = バナー u = 四次元ベルト"},
+{ term: "enable loadout input ", insert: "enable loadout input ", label:"enable loadout input ", description: "武器のロードアウトをキー入力での保存や呼び出しを有効化する。 "},
+{ term: "enable loadout print ", insert: "enable loadout print ", label:"enable loadout print ", description: "非表示にされたロードアウトメッセージを表示する。 "},
+{ term: "enable npcDialog ", insert: "enable npcDialog ", label:"enable npcDialog ", description: "非表示にされたNPCの吹き出しを表示する。 "},
+{ term: "enable pause ", insert: "enable pause ", label:"enable pause ", description: " disable pause コマンドで非表示にされたポーズボタンを表示する。 "},
+{ term: "enable player ", insert: "enable player ", label:"enable player ", description: " disable player コマンドで非表示にされたプレイヤーを表示する。 "},
+{ term: "encounter.eliteMod", insert: "encounter.eliteMod", label:"encounter.eliteMod", description: "現在交戦中の敵に特殊効果がある場合、その効果を示す "},
+{ term: "encounter.isElite", insert: "encounter.isElite", label:"encounter.isElite", description: "現在交戦中の敵がエリートかどうかを示す"},
+{ term: "Eq(", insert: "Eq($1)", label:"b.Eq(num) ", description: "BigNumberが数値と等しいかを判定する(=) "},
+{ term: "Eq(", insert: "Eq($1)", label:"b.Eq(BigNumber) ", description: "BigNumberが数値と等しいかを判定する(=) "},
+{ term: "equip ", insert: "equip ", label:"equip (str) ", description: "アイテムを装備する。(str)には7つの基準がある。両手持ちのアイテムはこの形式のequipコマンドを使わなければならない。 "},
+{ term: "equip @", insert: "equip @$1@", label:"equip @var@ ", description: "文字列変数からの条件に基づいてアイテムを装備する。装備やその他アイテム検索コマンドは減算条件に対応している。 "},
+{ term: "equipL ", insert: "equipL ", label:"equipL (str) ", description: "指定された条件に最も合うアイテムを左手に装備する。 "},
+{ term: "equipR ", insert: "equipR ", label:"equipR (str) ", description: "指定された条件に最も合うアイテムを右手に装備する。 "},
+{ term: "event.GetObjectiveGoal(", insert: "event.GetObjectiveGoal($1)", label:"event.GetObjectiveGoal(int) ", description: "コミュニティイベントまたはシーズンイベントの進行中の目標IDを取得する。取得したい目標のインデックスを渡す。イベント目標の数は、基本的に3つまでなので、最初のパラメータは0,1,2のいずれかになる。 "},
+{ term: "event.GetObjectiveId(", insert: "event.GetObjectiveId($1)", label:"event.GetObjectiveId(int) ", description: "コミュニティイベントまたはシーズンイベントの進行中の目標IDを取得する。取得したい目標のインデックスを渡す。イベント目標の数は、基本的に3つまでなので、最初のパラメータは0,1,2のいずれかになる。 "},
+{ term: "event.GetObjectiveProgress(", insert: "event.GetObjectiveProgress($1)", label:"event.GetObjectiveProgress(int) ", description: "コミュニティイベントまたはシーズンイベントの進行中の目標IDを取得する。取得したい目標のインデックスを渡す。イベント目標の数は、基本的に3つまでなので、最初のパラメータは0,1,2のいずれかになる。 "},
+{ term: "face ", insert: "face ", label:"face ", description: "プレイヤーの現在の表情。 "},
+{ term: "flipX ", insert: "flipX ", label:"anim.flipX ", description: "真の場合、アニメーションが水平方向に反転する。 "},
+{ term: "flipY ", insert: "flipY ", label:"anim.flipY ", description: "真の場合、アニメーションが垂直方向に反転する。 "},
+{ term: "foe", insert: "foe", label:"foe", description: "現在プレイヤーがターゲットにしている敵 "},
+{ term: "foe.armor", insert: "foe.armor", label:"foe.armor", description: "プレイヤーがターゲットにしている敵の現在のアーマー値"},
+{ term: "foe.buffs.count", insert: "foe.buffs.count", label:"foe.buffs.count", description: "ターゲットにしている敵にかかっているバフ(プラス効果)の数 "},
+{ term: "foe.buffs.GetCount(", insert: "foe.buffs.GetCount($1)", label:"foe.buffs.GetCount(str)", description: "ターゲットにしている敵の特定のバフの数 "},
+{ term: "foe.buffs.GetTime(", insert: "foe.buffs.GetTime($1)", label:"foe.buffs.GetTime(str)", description: "ターゲットにしている敵の特定のバフの持続時間"},
+{ term: "foe.buffs.string", insert: "foe.buffs.string", label:"foe.buffs.string", description: "ターゲットにしている敵のバフに関する詳細な情報 "},
+{ term: "foe.count", insert: "foe.count", label:"foe.count", description: "プレイヤーから46ユニット以内にいる敵の数 "},
+{ term: "foe.damage", insert: "foe.damage", label:"foe.damage", description: "プレイヤーがターゲットにしている敵の攻撃1回あたりのダメージ"},
+{ term: "foe.debuffs.count", insert: "foe.debuffs.count", label:"foe.debuffs.count", description: "ターゲットにしている敵にかかっているデバフ(マイナス効果)の数"},
+{ term: "foe.debuffs.GetCount(", insert: "foe.debuffs.GetCount($1) ", label:"foe.debuffs.GetCount(str) ", description: "ターゲットにしている敵の特定のデバフの数。 "},
+{ term: "foe.debuffs.GetTime(", insert: "foe.debuffs.GetTime($1)", label:"foe.debuffs.GetTime(str)", description: "ターゲットにしている敵の特定のデバフの持続時間。 "},
+{ term: "foe.debuffs.string ", insert: "foe.debuffs.string ", label:"foe.debuffs.string ", description: "ターゲットにしている敵のデバフに関する詳細な情報 "},
+{ term: "foe.distance", insert: "foe.distance", label:"foe.distance", description: "プレイヤーとターゲットにしている敵との距離 "},
+{ term: "foe.GetCount(", insert: "foe.GetCount($1)", label:"foe.GetCount(int) ", description: "指定されたユニット数以内にいる敵の数。"},
+{ term: "foe.hp", insert: "foe.hp", label:"foe.hp", description: "プレイヤーがターゲットにしている敵の現在のHP。 "},
+{ term: "foe.id", insert: "foe.id", label:"foe.id", description: "プレイヤーがターゲットにしている敵の固有ID "},
+{ term: "foe.level ", insert: "foe.level ", label:"foe.level ", description: "ターゲットにしている敵のレベル。 "},
+{ term: "foe.maxarmor", insert: "foe.maxarmor", label:"foe.maxarmor", description: "プレイヤーがターゲットにしている敵の最大アーマー値"},
+{ term: "foe.maxhp", insert: "foe.maxhp", label:"foe.maxhp", description: "プレイヤーがターゲットにしている敵の最大HP "},
+{ term: "foe.name", insert: "foe.name", label:"foe.name", description: "プレイヤーがターゲットにしている敵のローカライズされた名前。 "},
+{ term: "foe.state ", insert: "foe.state ", label:"foe.state ", description: "ターゲットにしている敵の現在の状態を表す数値。 "},
+{ term: "foe.time ", insert: "foe.time ", label:"foe.time ", description: "ターゲットにしている敵が現在の状態で経過したフレーム数。 "},
+{ term: "foe.z", insert: "foe.z", label:"foe.z", description: "ターゲットにしている敵のZ座標 "},
+{ term: "for ", insert: "for ", label:"for v = a..b ", description: "変数'v'を'a'から'b'までの値で繰り返し実行するループを作成する。ループのスコープ内に表示されるコードは複数回実行される｡ "},
+{ term: "frame ", insert: "frame ", label:"anim.frame ", description: "現在表示されているアニメーションフレーム。指定したフレームを表示することもできる。 "},
+{ term: "FromRGB(", insert: "FromRGB($1)", label:"color.FromRGB(r,g,b) ", description: "RGB(0~255の3つの整数)をカラーコードに変換する。 "},
+{ term: "func ", insert: "func ", label:"func (function) ", description: "後で呼び出せる関数を宣言する。"},
+{ term: "gamePause ", insert: "gamePause ", label:"anim.gamePause ", description: "真の場合、ゲームが一時停止したときにアニメーションも自動的に停止し、ゲームを再開するとアニメーションも再生する。 "},
+{ term: "Get( ", insert: "Get($1) ", label:"canvas.Get(int,int) ", description: "キャンバス上の指定した位置(x,y)にある文字を返す。 "},
+{ term: "Gt(", insert: "Gt($1)", label:"b.Gt(num) ", description: "BigNumberが数値より大きいかを判定する(>) "},
+{ term: "Gt(", insert: "Gt($1)", label:"b.Gt(BigNumber) ", description: "BigNumberが数値より大きいかを判定する(>) "},
+{ term: "h ", insert: "h ", label:"component.h ", description: "コンポーネントの高さ。デフォルト値は5。 "},
+{ term: "harvest ", insert: "harvest ", label:"harvest ", description: "木や岩など、近くの収穫可能なオブジェクト。 "},
+{ term: "harvest.distance ", insert: "harvest.distance ", label:"harvest.distance ", description: "プレイヤーと最も近い収穫可能なオブジェクトとの距離。 "},
+{ term: "harvest.z ", insert: "harvest.z ", label:"harvest.z ", description: "最も近い収穫可能なオブジェクトのZ座標。 "},
+{ term: "hcolor ", insert: "hcolor ", label:"button.hcolor ", description: "ボタンが押された時のハイライト色を設定する。色はRGB16進数で指定する"},
+{ term: "hp ", insert: "hp ", label:"hp ", description: "プレイヤーの現在のHP。 "},
+{ term: "import ", insert: "import ", label:"import (script) ", description: "外部スクリプトの単一のコピーを読み込んで実行する｡"},
+{ term: "IndexOf(", insert: "IndexOf($1) ", label:"a.IndexOf(value) ", description: "配列内で指定された値を検索する。値が最初に出現した位置を示す整数を返す。値が見つからない場合は-1を返す。 "},
+{ term: "input.x ", insert: "input.x ", label:"input.x ", description: "入力デバイス(マウス/タッチ)のアスキーグリッド上のX座標 "},
+{ term: "input.y ", insert: "input.y ", label:"input.y ", description: "入力デバイス(マウス/タッチ)のアスキーグリッド上のY座標 "},
+{ term: "Insert(", insert: "Insert($1)", label:"a.Insert(integer, value) ", description: "新しい値/オブジェクトを配列の指定された位置に追加する。右側の要素は次の位置に移動します。 "},
+{ term: "int.Parse(", insert: "int.Parse($1)", label:"int.Parse(str) ", description: "数値の文字列を整数に変換する。文字列が数値でない場合、エラーが発生する。 "},
+{ term: "item.CanActivate(", insert: "item.CanActivate($1)", label:"item.CanActivate(str) ", description: "特定のアイテムが装備されているかつ、能力発動が可能な場合は真となる。アイテムによっては、特定の上限を満たさない限り発動できないものもある。これはitem.GetCooldown()の一部であり、アイテムがクールダウン中でなくても能力発動ができない場合もある。 "},
+{ term: "item.CanActivate() ", insert: "item.CanActivate() ", label:"item.CanActivate() ", description: "アイテムの能力を発動できる場合は真、そうでない場合は偽になる。ボス戦前や、ムービー中など、一部のプレイ状況では能力発動が無効になる場合もある。 "},
+{ term: "item.GetCooldown(", insert: "item.GetCooldown($1)", label:"item.GetCooldown(str) ", description: "指定されたアイテム能力のクールダウン時間をフレーム単位で返す。 利用可能なすべての能力IDは、こちらを参照してください。注意：能力IDが無効の場合は-1を返します。まだ実装されていない武器の一部の能力も-1を返すことがあります。"},
+{ term: "item.GetCount(", insert: "item.GetCount($1)", label:"item.GetCount(str) ", description: "インベントリ内の指定されたアイテムの個数を返す。見つからない場合は0を返す。 "},
+{ term: "item.GetLoadoutL(", insert: "item.GetLoadoutL($1) ", label:"item.GetLoadoutL(int) ", description: "指定された装備セットのアイテムを返す。整数パラメータは、ロードアウト番号を示す。該当スロットに装備が存在しない場合は空白を返す。戻り値：string"},
+{ term: "item.GetLoadoutR(", insert: "item.GetLoadoutR($1)", label:"item.GetLoadoutR(int) ", description: "指定された装備セットのアイテムを返す。整数パラメータは、ロードアウト番号を示す。該当スロットに装備が存在しない場合は空白を返す。戻り値：string"},
+{ term: "item.GetTreasureCount() ", insert: "item.GetTreasureCount() ", label:"item.GetTreasureCount() ", description: "現在の宝箱の数を返す。 "},
+{ term: "item.GetTreasureLimit() ", insert: "item.GetTreasureLimit() ", label:"item.GetTreasureLimit() ", description: "保管可能な宝箱の上限を返す。 "},
+{ term: "item.left ", insert: "item.left ", label:"item.left ", description: "左手に装備されているアイテム。 "},
+{ term: "item.left.gp ", insert: "item.left.gp ", label:"item.left.gp ", description: "左手に装備されているアイテムのギアパワー。 "},
+{ term: "item.left.id ", insert: "item.left.id ", label:"item.left.id ", description: "左手に装備されているアイテムのID。 "},
+{ term: "item.left.state ", insert: "item.left.state ", label:"item.left.state ", description: "左手に装備されている武器の現在の状態 "},
+{ term: "item.left.time ", insert: "item.left.time ", label:"item.left.time ", description: "右手に装備されている武器の現在の状態 "},
+{ term: "item.potion ", insert: "item.potion ", label:"item.potion ", description: "現在調合されているポーション。大釜の自動補充が有効になっている場合は'auto' "},
+{ term: "item.right ", insert: "item.right ", label:"item.right ", description: "右手に装備されているアイテム。 "},
+{ term: "item.right.gp ", insert: "item.right.gp ", label:"item.right.gp ", description: "右手に装備されているアイテムのギアパワー。 "},
+{ term: "item.right.id ", insert: "item.right.id ", label:"item.right.id ", description: "右手に装備されているアイテムのID。 "},
+{ term: "item.right.state ", insert: "item.right.state ", label:"item.right.state ", description: "左手に装備されている武器の現在状態での経過フレーム数 "},
+{ term: "item.right.time ", insert: "item.right.time ", label:"item.right.time ", description: "右手に装備されている武器の現在状態での経過フレーム数 "},
+{ term: "key ", insert: "key ", label:"key ", description: "カスタムゲーム入力の状態"},
+{ term: "key.Bind(", insert: "key.Bind($1)", label:"key.Bind(act, key1) ", description: "特定のアクションに対して新しいキーを割り当てる。別のアクションにそのキーが割り当てられている場合、元のアクションにあるそのキーの割り当ては削除される。アクションには最大2つのキーを割り当てることが可能。 "},
+{ term: "key.Bind(", insert: "key.Bind($1)", label:"key.Bind(act, key1, key2) ", description: "特定のアクションに対して新しいキーを割り当てる。別のアクションにそのキーが割り当てられている場合、元のアクションにあるそのキーの割り当ては削除される。アクションには最大2つのキーを割り当てることが可能。 "},
+{ term: "key.GetActKey(", insert: "key.GetActKey($1)", label:"key.GetActKey(act) ", description: "指定されたアクションに割り当てられている1つ目のキーを返す。そのアクションにキーが割り振られていない場合は None を返す。 "},
+{ term: "key.GetActKey2(", insert: "key.GetActKey2($1)", label:"key.GetActKey2(act) ", description: "指定されたアクションに割り当てられている2つ目のキーを返す。そのアクションに2つ目のキーが割り振られていない場合は None を返す。 "},
+{ term: "key.GetActLabel(", insert: "key.GetActLabel($1)", label:"key.GetActLabel(act)", description: "指定されたアクションに割り当てられている1つ目のキーを示すユーザー向けのラベルを返す。現在の実装では、割り当てられたキーの最初の1文字目を返すため、 LeftShift のようなキーの場合は分かりにくい可能性がある。 "},
+{ term: "key.GetKeyAct(", insert: "key.GetKeyAct($1)", label:"key.GetKeyAct(key) ", description: "指定されたキーに割り当てられているアクションを返す。そのキーがどのアクションにも割り振られていない場合は None を返す。 "},
+{ term: "key.ResetBinds() ", insert: "key.ResetBinds() ", label:"key.ResetBinds() ", description: "すべてのアクションのキー割り当てをデフォルトにリセットする。 "},
+{ term: "Le(", insert: "Le($1)", label:"b.Le(num) ", description: "BigNumberが数値以下かを判定する(<=) "},
+{ term: "Le(", insert: "Le($1)", label:"b.Le(BigNumber) ", description: "BigNumberが数値以下かを判定する(<=) "},
+{ term: "Lerp(", insert: "Lerp($1)", label:"color.Lerp(c1,c2,t) ", description: "時間t(割合)に応じて、色c1から色c2へ線形補間を行う。 "},
+{ term: "Load( ", insert: "Load($1) ", label:"anim.Load(string) ", description: "新しいアスキーアートのスプライトシートを割り当てる。 "},
+{ term: "loadout ", insert: "loadout ", label:"loadout (n) ", description: "特定のロードアウト番号を装備する。 "},
+{ term: "loc", insert: "loc", label:"loc", description: "現在のエリア"},
+{ term: "loc.averageTime", insert: "loc.averageTime", label:"loc.averageTime", description: "現在のエリアの平均クリアタイム "},
+{ term: "loc.begin", insert: "loc.begin", label:"loc.begin", description: "time=0でのみtrue/ウロボロスループ以降はtrueにならない"},
+{ term: "loc.bestTime", insert: "loc.bestTime", label:"loc.bestTime", description: "現在のエリアの最短クリアタイム "},
+{ term: "loc.gp", insert: "loc.gp", label:"loc.gp", description: "現在のループで使用されている総ギアパワー"},
+{ term: "loc.id", insert: "loc.id", label:"loc.id", description: "現在のエリアの固有の識別子"},
+{ term: "loc.isQuest", insert: "loc.isQuest", label:"loc.isQuest", description: "現在のエリアが、伝説のクエストやカスタムクエストなどであればtrue それ以外はfalse"},
+{ term: "loc.Leave() ", insert: "loc.Leave() ", label:"loc.Leave() ", description: "プレイヤーが手動でリタイアボタンを押したかようにエリアを退出する。 "},
+{ term: "loc.loop", insert: "loc.loop", label:"loc.loop", description: "ウロボロスループ後の最初のフレームでのみtrue"},
+{ term: "loc.name", insert: "loc.name", label:"loc.name", description: "ローカライズされた現在のエリア"},
+{ term: "loc.Pause() ", insert: "loc.Pause() ", label:"loc.Pause() ", description: "プレイヤーが手動で一時停止ボタンを押したかのようにエリアを一時停止する。 "},
+{ term: "loc.stars", insert: "loc.stars", label:"loc.stars", description: "現在のエリアの難易度"},
+{ term: "loop ", insert: "loop ", label:"anim.loop ", description: "真の場合、アニメーションの再生時間が終了した直後に最初から再スタートする。 "},
+{ term: "Lt(", insert: "Lt($1)", label:"b.Lt(num) ", description: "BigNumberが数値より小さいかを判定する(<) "},
+{ term: "Lt(", insert: "Lt($1)", label:"b.Lt(BigNumber) ", description: "BigNumberが数値より小さいかを判定する(<) "},
+{ term: "math.Abs(", insert: "math.Abs($1) ", label:"math.Abs(num) ", description: "指定された数値の絶対値を返す。 "},
+{ term: "math.Acos(", insert: "math.Acos($1) ", label:"math.Acos(num) ", description: "指定された数値の逆余弦(アークコサイン)をラジアン単位で返す。入力値は-1から1の範囲である必要があり、範囲外の場合は NaN を返す。 "},
+{ term: "math.Asin(", insert: "math.Asin($1) ", label:"math.Asin(num) ", description: "指定された数値の逆正弦(アークサイン)をラジアン単位で返す。入力値は-1から1の範囲である必要があり、範囲外の場合は NaN を返す。 "},
+{ term: "math.Atan(", insert: "math.Atan($1) ", label:"math.Atan(num) ", description: "指定された数値の逆正接(アークタンジェント)をラジアン単位で返す。 "},
+{ term: "math.Atan2(", insert: "math.Atan2($1)", label:"math.Atan2(y, x) ", description: "原点から点(x,y)への線とx軸との間の角度をラジアン単位で返す。 "},
+{ term: "math.BigNumber(", insert: "math.BigNumber($1)", label:"math.BigNumber(number) ", description: "浮動小数点数または整数から新しいBigNumberオブジェクトを作成するか、文字列を数値に変換してBigNumberオブジェクトを生成する。 "},
+{ term: "math.BigNumber(", insert: "math.BigNumber($1)", label:"math.BigNumber(str) ", description: "浮動小数点数または整数から新しいBigNumberオブジェクトを作成するか、文字列を数値に変換してBigNumberオブジェクトを生成する。 "},
+{ term: "math.BigNumber() ", insert: "math.BigNumber() ", label:"math.BigNumber() ", description: "浮動小数点数または整数から新しいBigNumberオブジェクトを作成するか、文字列を数値に変換してBigNumberオブジェクトを生成する。 "},
+{ term: "math.Ceil(", insert: "math.Ceil($1)", label:"math.Ceil(num) ", description: "数値を切り上げ、元の数より大きい最も近い整数(小数点あり)を返す。 "},
+{ term: "math.CeilToInt(", insert: "math.CeilToInt($1)", label:"math.CeilToInt(num) ", description: "数値を切り上げ、元の数より大きい最も近い整数(小数点なし)を返す。 "},
+{ term: "math.Clamp( ", insert: "math.Clamp($1)", label:"math.Clamp(num, min, max) ", description: "数値を'min'から'max'の範囲内に制限する。数値がすでに範囲内にある場合、そのまま返される。 "},
+{ term: "math.Cos(", insert: "math.Cos($1)", label:"math.Cos(num) ", description: "指定されたラジアン角の余弦(コサイン)を返す。 "},
+{ term: "math.e ", insert: "math.e ", label:"math.e ", description: "数学定数e、ネイピア数とも呼ばれる。値は約2.71828 "},
+{ term: "math.Exp(", insert: "math.Exp($1)", label:"math.Exp(num) ", description: "eを指定した数値のべき乗で計算した結果を返す。 "},
+{ term: "math.Floor(", insert: "math.Floor($1)", label:"math.Floor(num) ", description: "数値を切り下げ、元の数より小さい最も近い整数(小数点あり)を返す。 "},
+{ term: "math.FloorToInt(", insert: "math.FloorToInt($1)", label:"math.FloorToInt(num) ", description: "数値を切り下げ、元の数より小さい最も近い整数(小数点なし)を返す。 "},
+{ term: "math.Lerp(", insert: "math.Lerp($1)", label:"math.Lerp(a, b, t) ", description: "時間t(割合)に応じて、値aからbへ線形補間を行う。 "},
+{ term: "math.Log(", insert: "math.Log($1)", label:"math.Log(num, base) ", description: "指定された底(base)での数値の対数を返す。 "},
+{ term: "math.Max(", insert: "math.Max($1)", label:"math.Max(num1, num2) ", description: "2つの数値のうち大きい方を返す。 "},
+{ term: "math.Min(", insert: "math.Min($1)", label:"math.Min(num1, num2) ", description: "2つの数値のうち小さい方を返す。 "},
+{ term: "math.pi ", insert: "math.pi ", label:"math.pi ", description: "数学定数π、値は約3.1415926 "},
+{ term: "math.Pow( ", insert: "math.Pow($1) ", label:"math.Pow(num, p) ", description: "指定された数値をべき乗で計算した結果を返す。 "},
+{ term: "math.Round( ", insert: "math.Round($1) ", label:"math.Round(num) ", description: "数値を四捨五入して、元の数から最も近い整数(小数点あり)を返す。 "},
+{ term: "math.RoundToInt( ", insert: "math.RoundToInt($1) ", label:"math.RoundToInt(num) ", description: "数値を四捨五入して、元の数から最も近い整数(小数点なし)を返す。 "},
+{ term: "math.Sign( ", insert: "math.Sign($1) ", label:"math.Sign(num) ", description: "指定された数値が負の場合は-1、それ以外の場合は1を返す。 "},
+{ term: "math.Sin( ", insert: "math.Sin($1) ", label:"math.Sin(num) ", description: "指定されたラジアン角の正弦(サイン)を返す。 "},
+{ term: "math.Sqrt( ", insert: "math.Sqrt($1) ", label:"math.Sqrt(num) ", description: "指定された数値の平方根を返す。 "},
+{ term: "math.Tan( ", insert: "math.Tan($1) ", label:"math.Tan(num) ", description: "指定されたラジアン角の正接(タンジェント)を返す。 "},
+{ term: "math.ToDeg( ", insert: "math.ToDeg($1) ", label:"math.ToDeg(num) ", description: "ラジアン単位の数値を度(°)に変換する。 "},
+{ term: "math.ToRad( ", insert: "math.ToRad($1) ", label:"math.ToRad(num) ", description: "度数の数値をラジアンに変換する。 "},
+{ term: "maxarmor ", insert: "maxarmor ", label:"maxarmor ", description: "プレイヤーの最大アーマー(端数切り捨て)。 "},
+{ term: "maxhp ", insert: "maxhp ", label:"maxhp ", description: "プレイヤーの最大HP。 "},
+{ term: "MOD", insert: "MOD", label:"MOD", description: "修正_コメント記載用"},
+{ term: "Mul( ", insert: "Mul($1)", label:"b.Mul(num) ", description: "BigNumberを数値で乗算する(*) 戻り値：itself"},
+{ term: "Mul( ", insert: "Mul($1)", label:"b.Mul(BigNumber) ", description: "BigNumberを数値で乗算する(*) 戻り値：itself"},
+{ term: "music ", insert: "music ", label:"music ", description: "現在再生中の曲のIDを返す。 "},
+{ term: "music.Play( ", insert: "music.Play($1) ", label:"music.Play(str) ", description: "指定されたサウンドIDの曲を再生する。1度に再生できる曲は1つのみ。 "},
+{ term: "music.Stop() ", insert: "music.Stop() ", label:"music.Stop() ", description: "再生中の曲を停止する。 "},
+{ term: "new ", insert: "new ", label:"new (script) ", description: " import と類似する外部スクリプトを読み込んで実行する。ただし、 new で読み込まれたオブジェクトはそれぞれ個別のコピーであり、スクリプト本体は1回しか実行されない。"},
+{ term: "parent ", insert: "parent ", label:"component.parent ", description: "コンポーネントの親パネルの参照。コンポーネントがパネルに追加されなかった場合、ルートパネルを参照する。panel.Add(component)が呼び出されると、親が変更される。 "},
+{ term: "Pause() ", insert: "Pause() ", label:"anim.Pause() ", description: "再生中のアニメーションを一時停止する。anim.Play()を呼び出すと再開できる。 "},
+{ term: "paused ", insert: "paused ", label:"anim.paused ", description: "アニメーションが再生中で、anim.Pause()の呼び出しで一時停止されている場合に真となる。 "},
+{ term: "pickup ", insert: "pickup ", label:"pickup ", description: "現在プレイヤーがターゲットにしている素材。 "},
+{ term: "pickup.distance ", insert: "pickup.distance ", label:"pickup.distance ", description: "プレイヤーとターゲットにしている素材との距離。 "},
+{ term: "pickup.z ", insert: "pickup.z ", label:"pickup.z ", description: "ターゲットにしている素材のZ座標。 "},
+{ term: "pivotX ", insert: "pivotX ", label:"anim.pivotX ", description: "アスキーアートの描画位置の中心点を微調整できる、追加のオフセット。 "},
+{ term: "pivotY ", insert: "pivotY ", label:"anim.pivotY ", description: "アスキーアートの描画位置の中心点を微調整できる、追加のオフセット。 "},
+{ term: "play ", insert: "play ", label:"play (sound) (pitch) ", description: "任意のピッチ値を持つ効果音を再生する。ピッチの初期値は100で、数値が大きいほどピッチが上がり、数値が小さいほど下がる。"},
+{ term: "Play() ", insert: "Play() ", label:"anim.Play() ", description: "アニメーションの再生を開始する。一時停止の場合は再生を再開する。 "},
+{ term: "player.direction ", insert: "player.direction ", label:"player.direction ", description: "プレイヤーが向いている方向を示す。右の場合は1を、左の場合は-1を返す "},
+{ term: "player.framesPerMove ", insert: "player.framesPerMove ", label:"player.framesPerMove ", description: "プレイヤーが一マス先に移動するのにかかるフレーム数。 "},
+{ term: "player.GetNextLegendName() ", insert: "player.GetNextLegendName() ", label:"player.GetNextLegendName() ", description: "プレイヤーがまだクリアしていない、次にアンロックされる伝説のクエストの名前 "},
+{ term: "player.name ", insert: "player.name ", label:"player.name ", description: "プレイヤーが決めた名前 "},
+{ term: "player.ShowScaredFace( ", insert: "player.ShowScaredFace($1) ", label:"player.ShowScaredFace(num) ", description: "プレイヤーがビッグヘッドを有効にしている場合、指定された時間の間、表情が怖がったものに変わる。 "},
+{ term: "playing ", insert: "playing ", label:"anim.playing ", description: "アニメーションが再生中であれば真となる。 "},
+{ term: "playOnStart ", insert: "playOnStart ", label:"anim.playOnStart ", description: "真の場合、アニメーションはできるだけ早く再生を開始する。 "},
+{ term: "pos.x ", insert: "pos.x ", label:"pos.x ", description: "プレイヤーの現在のX座標。 "},
+{ term: "pos.y", insert: "pos.y", label:"pos.y", description: "プレイヤーの現在のY座標。 "},
+{ term: "pos.z", insert: "pos.z", label:"pos.z", description: "プレイヤーの現在のZ座標。 "},
+{ term: "Random() ", insert: "Random() ", label:"color.Random() ", description: "ランダムな色を返す。 "},
+{ term: "Recycle() ", insert: "Recycle() ", label:"component.Recycle() ", description: "親パネルからコンポーネントを削除する。ui.Add_()の呼び出しで再利用される。バグを避けるために、リサイクルされた要素への変数参照はすべてnullにするか、再割り当てする必要がある。 "},
+{ term: "Remove( ", insert: "Remove($1) ", label:"panel.Remove(Component) ", description: "パネルから指定したコンポーネントを削除する。また、インデックス番号を指定することで削除することもできる。削除された要素はUIシステムに戻され、ui.Add_()の呼び出しで再利用される。バグを避けるために、削除された要素への変数参照はすべてnullにするか、再割り当てする必要がある。 "},
+{ term: "Remove( ", insert: "Remove($1) ", label:"panel.Remove(int) ", description: "パネルから指定したコンポーネントを削除する。また、インデックス番号を指定することで削除することもできる。削除された要素はUIシステムに戻され、ui.Add_()の呼び出しで再利用される。バグを避けるために、削除された要素への変数参照はすべてnullにするか、再割り当てする必要がある。 "},
+{ term: "RemoveAt(", insert: "RemoveAt($1)", label:"a.RemoveAt(integer) ", description: "指定された位置の配列の要素を削除する。削除された値を返す。myArray.RemoveAt(0)は最初の要素を削除する。右側の要素は前の位置に移動する。"},
+{ term: "res.bronze ", insert: "res.bronze ", label:"res.bronze ", description: "プレイヤーのインベントリ内にある現在の素材量 "},
+{ term: "res.crystals ", insert: "res.crystals ", label:"res.crystals ", description: "プレイヤーのインベントリ内にある現在の素材量 "},
+{ term: "res.ki ", insert: "res.ki ", label:"res.ki ", description: "プレイヤーのインベントリ内にある現在の素材量 "},
+{ term: "res.stone ", insert: "res.stone ", label:"res.stone ", description: "プレイヤーのインベントリ内にある現在の素材量 "},
+{ term: "res.tar ", insert: "res.tar ", label:"res.tar ", description: "プレイヤーのインベントリ内にある現在の素材量 "},
+{ term: "res.wood ", insert: "res.wood ", label:"res.wood ", description: "プレイヤーのインベントリ内にある現在の素材量 "},
+{ term: "rng ", insert: "rng ", label:"rng ", description: "0から9999の範囲でランダムな整数を返す。 "},
+{ term: "rngf ", insert: "rngf ", label:"rngf ", description: "0から1のランダムな浮動小数点数を返す。 "},
+{ term: "screen.FromWorldX( ", insert: "screen.FromWorldX($1) ", label:"screen.FromWorldX(int) ", description: "ワールド座標のX軸の値を、スクリーン座標に変換する。 "},
+{ term: "screen.FromWorldZ( ", insert: "screen.FromWorldZ($1) ", label:"screen.FromWorldZ(int) ", description: "ワールド座標のZ軸の値を、スクリーン座標のY軸の値に変換する。 "},
+{ term: "screen.h", insert: "screen.h", label:"screen.h", description: "画面のアスキーグリッドの高さ。 "},
+{ term: "screen.i", insert: "screen.i", label:"screen.i", description: "ゲーム内画面の位置をインデックスとして表す。プレイヤーが右端に到達して画面がスライドするたびに増加する。 "},
+{ term: "screen.Next() ", insert: "screen.Next() ", label:"screen.Next() ", description: "スクリーンが複数あるエリアの場合、プレイヤーに対してカメラを1画面分前方に移動する。 "},
+{ term: "screen.Previous() ", insert: "screen.Previous() ", label:"screen.Previous() ", description: "スクリーンが複数あるエリアの場合、プレイヤーに対してカメラを1画面分後方に移動する。 "},
+{ term: "screen.ResetOffset() ", insert: "screen.ResetOffset() ", label:"screen.ResetOffset() ", description: "screen.Next()やscreen.Previous()によって行われたカメラ位置の変更をリセットし、プレイヤーに追従する状態に戻す。 "},
+{ term: "screen.ToWorldX( ", insert: "screen.ToWorldX($1) ", label:"screen.ToWorldX(int) ", description: "スクリーン座標のX軸の値を、ワールド座標に変換する。 "},
+{ term: "screen.ToWorldZ( ", insert: "screen.ToWorldZ($1) ", label:"screen.ToWorldZ(int) ", description: "スクリーン座標のY軸の値を、ワールド座標のZ軸の値に変換する。 "},
+{ term: "screen.w", insert: "screen.w", label:"screen.w", description: "画面のアスキーグリッドの幅。 "},
+{ term: "screen.x", insert: "screen.x", label:"screen.x", description: "ゲーム内画面のX座標。 "},
+{ term: "Set( ", insert: "Set($1) ", label:"canvas.Set(str) ", description: "キャンバス全体を指定した文字で塗りつぶす。 "},
+{ term: "Set( ", insert: "Set($1) ", label:"canvas.Set(int,int,str) ", description: "キャンバス上の指定した位置(x,y)を指定された文字に変更する。 "},
+{ term: "Set( ", insert: "Set($1) ", label:"canvas.Set(int,int, fg,str) ", description: "指定した位置のキャンバスや文字を変更し、同時に前景色と背景色を設定するためのオーバーロード。 "},
+{ term: "Set( ", insert: "Set($1) ", label:"canvas.Set(int,int, fg,bg,str) ", description: "指定した位置のキャンバスや文字を変更し、同時に前景色と背景色を設定するためのオーバーロード。 "},
+{ term: "SetBG( ", insert: "SetBG($1) ", label:"canvas.SetBG(color) ", description: "キャンバス全体の背景色を設定する。 "},
+{ term: "SetBG( ", insert: "SetBG($1) ", label:"canvas.SetBG(int,int, color) ", description: "キャンバス上の指定した位置(x,y)の背景を設定する。 "},
+{ term: "SetDown( ", insert: "SetDown($1) ", label:"button.SetDown(f) ", description: "ボタンを押し始めたとき(最初に接触した瞬間)に実行される関数を指定する。 "},
+{ term: "SetFG( ", insert: "SetFG($1)", label:"canvas.SetFG(color) ", description: "キャンバス全体の前景色を設定する。 "},
+{ term: "SetFG( ", insert: "SetFG($1) ", label:"canvas.SetFG(int,int, color) ", description: "キャンバス上の指定した位置(x,y)の前景色を設定する。 "},
+{ term: "SetPressed( ", insert: "SetPressed($1) ", label:"button.SetPressed(f) ", description: "ボタンが押されたときに実行される関数を指定する。関数は任意の数のパラメータを持つことができる(パラメータがない場合も含む)。関数が呼ばれると、最初のパラメータはボタンへの参照になる。 "},
+{ term: "SetUp( ", insert: "SetUp($1) ", label:"button.SetUp(f) ", description: "ボタンを押し終わったとき(最後の接触が終わった瞬間)に実行される関数を指定する。 "},
+{ term: "Sort()", insert: "Sort()", label:"a.Sort() ", description: "配列の要素を昇順に整理する。配列に異なる型のオブジェクトが含まれていてもソートされるが、期待される結果が定義されず、要素が型ごとにグループ化される保証はされない。 "},
+{ term: "sound ", insert: "sound ", label:"button.sound ", description: "ボタンが押された時に再生される効果音を設定する。デフォルトは confirm 。"},
+{ term: "Stop() ", insert: "Stop() ", label:"anim.Stop() ", description: "アニメーションの再生を停止し、最初のフレームに戻す。 "},
+{ term: "storage.Delete( ", insert: "storage.Delete($1) ", label:"storage.Delete(string) ", description: "指定されたキーに存在する可能性のある値を削除する。 "},
+{ term: "storage.Get( ", insert: "storage.Get($1) ", label:"storage.Get(string) ", description: "指定されたキーに保存されている永続的な値を取得する。 "},
+{ term: "storage.Get( ", insert: "storage.Get($1) ", label:"storage.Get(string, value) ", description: "指定されたキーに保存されている永続的な値を取得する。存在しない場合は、2つ目のパラメータをデフォルト値として返す。 "},
+{ term: "storage.Has( ", insert: "storage.Has($1) ", label:"storage.Has(string) ", description: "指定されたキーが永続ストレージに存在する場合はtrue、存在しなければfalseを返す。 "},
+{ term: "storage.Incr( ", insert: "storage.Incr($1) ", label:"storage.Incr(string) ", description: "指定されたキーに保存されている値を1増やし、その新しい値を返す。 "},
+{ term: "storage.Incr( ", insert: "storage.Incr($1) ", label:"storage.Incr(string, integer) ", description: "指定されたキーに保存されている値を指定された値分だけ増やし、その新しい値を返す。 "},
+{ term: "storage.Keys() ", insert: "storage.Keys() ", label:"storage.Keys() ", description: "現在のコンテキストで利用可能なストレージキーを含む文字列の配列を取得する。 "},
+{ term: "storage.Set( ", insert: "storage.Set($1) ", label:"storage.Set(string, value) ", description: "指定されたキーに値を永続ストレージに保存する。 "},
+{ term: "string.Break( ", insert: "string.Break($1) ", label:"string.Break(string, integer) ", description: "指定された最大幅に基づいて、1つの文字列を複数の文字列に分割する。 "},
+{ term: "string.Capitalize( ", insert: "string.Capitalize($1) ", label:"string.Capitalize(str) ", description: "文字列の先頭の文字を大文字に変換する。 "},
+{ term: "string.Equals( ", insert: "string.Equals($1) ", label:"string.Equals(str1, str2) ", description: "2つの文字列を比較し、完全に一致していれば真、一致しなければ偽を返す。大文字と小文字は区別される。 "},
+{ term: "string.Format( ", insert: "string.Format($1) ", label:"string.Format(str1, ...) ", description: "フォーマットテンプレートを後続の引数の値に置き換え、最終的に構成された文字列を返す。多くのフォーマットオプションに対応している。 "},
+{ term: "string.IndexOf( ", insert: "string.IndexOf($1) ", label:"string.IndexOf(str, criteria) ", description: "文字列変数strの中から、検索文字列criteriaの位置を探す。見つからなければ-1を返す。 "},
+{ term: "string.IndexOf( ", insert: "string.IndexOf($1) ", label:"string.IndexOf(str, criteria, startAt) ", description: "文字列変数strの中から、検索文字列criteriaを、開始位置startAtから探す。見つからなければ-1を返す。 "},
+{ term: "string.Join( ", insert: "string.Join($1) ", label:"string.Join(s, []) ", description: "文字列の配列[]を、区切り文字sで1つの文字列に結合する。任意で、結合を開始するインデックスと結合する要素数を指定する整数パラメータを渡すことができる。これらのパラメータを省略した場合は、配列全体が結合される。 "},
+{ term: "string.Join( ", insert: "string.Join($1) ", label:"string.Join(s, [], int) ", description: "文字列の配列[]を、区切り文字sで1つの文字列に結合する。任意で、結合を開始するインデックスと結合する要素数を指定する整数パラメータを渡すことができる。これらのパラメータを省略した場合は、配列全体が結合される。 "},
+{ term: "string.Join( ", insert: "string.Join($1) ", label:"string.Join(s, [], int,int) ", description: "文字列の配列[]を、区切り文字sで1つの文字列に結合する。任意で、結合を開始するインデックスと結合する要素数を指定する整数パラメータを渡すことができる。これらのパラメータを省略した場合は、配列全体が結合される。 "},
+{ term: "string.Size( ", insert: "string.Size($1) ", label:"string.Size(str) ", description: "文字列変数をパラメータとして受け取り、その文字列の長さ(文字数)を計算する。 "},
+{ term: "string.Split( ", insert: "string.Split($1) ", label:"string.Split(str) ", description: "文字列を受け取り、区切り文字s…に従って文字列の配列に分割する。区切り文字が指定されていない場合は、空白があるところで分割される。任意の真偽値パラメータは、空のエントリを破棄するかどうかを指定する。 "},
+{ term: "string.Split( ", insert: "string.Split($1) ", label:"string.Split(str, s…) ", description: "文字列を受け取り、区切り文字s…に従って文字列の配列に分割する。区切り文字が指定されていない場合は、空白があるところで分割される。任意の真偽値パラメータは、空のエントリを破棄するかどうかを指定する。 "},
+{ term: "string.Split( ", insert: "string.Split($1) ", label:"string.Split(str, s…, bool) ", description: "文字列を受け取り、区切り文字s…に従って文字列の配列に分割する。区切り文字が指定されていない場合は、空白があるところで分割される。任意の真偽値パラメータは、空のエントリを破棄するかどうかを指定する。 "},
+{ term: "string.Split( ", insert: "string.Split($1) ", label:"string.Split(str, bool) ", description: "文字列を受け取り、区切り文字s…に従って文字列の配列に分割する。区切り文字が指定されていない場合は、空白があるところで分割される。任意の真偽値パラメータは、空のエントリを破棄するかどうかを指定する。 "},
+{ term: "string.Sub( ", insert: "string.Sub($1) ", label:"string.Sub(str, startAt) ", description: "文字列変数から、開始位置以降の文字列を抽出する。 "},
+{ term: "string.Sub( ", insert: "string.Sub($1) ", label:"string.Sub(str, startAt, length) ", description: "文字列変数から、開始位置以降の文字列から指定された文字数分のみを抽出する。 "},
+{ term: "string.ToLower( ", insert: "string.ToLower($1) ", label:"string.ToLower(str) ", description: "文字列内のすべての文字を小文字に変換する。 "},
+{ term: "string.ToUpper( ", insert: "string.ToUpper($1) ", label:"string.ToUpper(str) ", description: "文字列内のすべての文字を大文字に変換する。 "},
+{ term: "style ", insert: "style ", label:"panel.style ", description: "パネルの現在のスタイルID。デフォルト値は1で、-8から8までの値を指定することができる。スタイルはui.AddStyle()で新たに追加することができる。 "},
+{ term: "style ", insert: "style ", label:"button.style ", description: "ボタンの現在のスタイルID。デフォルト値は1で、-8から8までの値を指定することができる。スタイルはui.AddStyle()で新たに追加することができる。"},
+{ term: "Sub(", insert: "Sub($1)", label:"b.Sub(num) ", description: "BigNumberから数値を減算する(-) 戻り値：itself"},
+{ term: "Sub(", insert: "Sub($1)", label:"b.Sub(BigNumber) ", description: "BigNumberから数値を減算する(-) 戻り値：itself"},
+{ term: "summon.count ", insert: "summon.count ", label:"summon.count ", description: "現在ゲーム内にいる召喚された仲間の数。 "},
+{ term: "summon.GetId(", insert: "summon.GetId($1)", label:"summon.GetId(index = 0) ", description: "指定されたインデックスの召喚された仲間のIDを返す｡インデックスパラメータは省略可能で、デフォルトは0(最初の召喚)。指定したインデックスに仲間がいない場合はnullを返す｡ "},
+{ term: "summon.GetName(", insert: "summon.GetName($1)", label:"summon.GetName(index = 0) ", description: "指定されたインデックスの召喚された仲間のローカライズ名を返す。インデックスパラメータは省略可能で、デフォルトは0(最初の召喚)。指定したインデックスに仲間がいない場合はnullを返す｡ "},
+{ term: "summon.GetState(", insert: "summon.GetState($1)", label:"summon.GetState(index = 0)", description: "指定されたインデックスの召喚された仲間の現在の状態を表す数値を返す。インデックスパラメータは省略可能で、デフォルトは0(最初の召喚)。指定したインデックスに仲間がいない場合は-1を返す｡ "},
+{ term: "summon.GetTime(", insert: "summon.GetTime($1)", label:"summon.GetTime(index = 0)", description: "指定されたインデックスの召喚された仲間の状態の経過フレーム数を返す。インデックスパラメータは省略可能で、デフォルトは0(最初の召喚)。指定したインデックスに仲間がいない場合は-1を返す｡ "},
+{ term: "summon.GetVar(", insert: "summon.GetVar($1) ", label:"summon.GetVar(varName, Index = 0)", description: "召喚された仲間のカスタム変数の値を返す。召喚の種類によって異なる変数が使用されている。インデックスパラメータは省略可能で、デフォルトは0(最初の召喚)。指定したインデックスに仲間がいない場合はnullを返す｡varNameが無効な変数の場合はエラーを表示する。 "},
+{ term: "sys.cacheRemoteFiles ", insert: "sys.cacheRemoteFiles ", label:"sys.cacheRemoteFiles ", description: "リモートからインポートされたファイルを、実行時にキャッシュするかどうかを示す。デフォルトはtrue。falseに設定すると、エリア画面からプレイ開始する際にリモートスクリプトが再ダウンロードされる。リモートで展開される新しいスクリプトの開発や反復作業中にこれを変更すると便利。このグローバルプロパティは実行間で保持される。 "},
+{ term: "sys.fileUrl ", insert: "sys.fileUrl ", label:"sys.fileUrl ", description: "スクリプトのインポート時に使用される現在のファイルパスを取得するためのゲッター。デフォルト値はデバイスによって異なり、PCではlocal、モバイルではhttps://StonestoryRPG.com/stonescript/となる。 "},
+{ term: "sys.isMobile ", insert: "sys.isMobile ", label:"sys.isMobile ", description: "ユーザーがAndroidまたはiOSを使用している場合にtrueを返す。 "},
+{ term: "sys.isPC ", insert: "sys.isPC ", label:"sys.isPC ", description: "ユーザーがWin/Mac/Linuxを使用している場合にtrueを返す。 "},
+{ term: "sys.MindConnect() ", insert: "sys.MindConnect() ", label:"sys.MindConnect() ", description: "(実験的機能) 明瞭の石にsys.MindConnect()だけが記述されている場合にのみ動作する。他のプログラム(Pythonスクリプトなど)からの接続を待つインターフェイスを有効にする。接続されると、外部プログラムがStonescriptコマンドを実行したり、ゲーム状態の変数を評価することができるようになる。 "},
+{ term: "sys.os ", insert: "sys.os ", label:"sys.os ", description: "ユーザーのオペレーティングシステムを返す。例えば Android 、 iOS 、 Linux 、 OSX 、 Windows などがある。 "},
+{ term: "sys.SetFileUrl( ", insert: "sys.SetFileUrl($1) ", label:"sys.SetFileUrl(str) ", description: "importまたはnewコマンドでインポートする際の、元のファイルパスを変更する。明瞭の石でのみ呼び出すことができ、インポートされたスクリプトに書かれている場合はエラーになる。任意のURLをリモート場所として受け付けるが、ローカルドライブを指す local および公式Stone Story RPGリポジトリを指す remote という値もショートカットとして対応している。パラメータにnullが渡されると、ファイルURLはデバイスのデフォルト値にリセットされる。このグローバルプロパティは実行間で保持される。 "},
+{ term: "tcolor ", insert: "tcolor ", label:"button.tcolor ", description: "ボタン内のテキストの色を設定する。色はRGB16進数で指定する。"},
+{ term: "te.GetTID( ", insert: "te.GetTID($1) ", label:"te.GetTID(str) ", description: "指定されたテキストのテキスト識別子(TID)を返す。入力テキストは、プレイヤーが選択した言語であることが前提である。 "},
+{ term: "te.language ", insert: "te.language ", label:"te.language ", description: "プレイヤーが設定で選択した言語のコード。 使用可能値：EN PT-BR ZH-CN ZH-TW FR DE RU ES-LA ES-EU JP KR TK "},
+{ term: "te.ToEnglish( ", insert: "te.ToEnglish($1) ", label:"te.ToEnglish(str) ", description: "プレイヤーが選択した言語のテキストを、元の英語のテキストに翻訳する。翻訳版が見つからない場合は、入力されたテキストがそのまま返される。 "},
+{ term: "te.xt( ", insert: "te.xt($1) ", label:"te.xt(str) ", description: "指定された英語のテキストを、プレイヤーの選択した言語に翻訳する。翻訳版が見つからない場合は、入力されたテキストがそのまま返される。また、テキスト識別子(TID)を入力として使うこともできるが、TIDの詳細なリストはマニュアルの範囲外である。 "},
+{ term: "text ", insert: "text ", label:"button.text ", description: "ボタン内に表示されるテキストを設定する。 "},
+{ term: "time ", insert: "time ", label:"time ", description: "現在のエリアで経過したフレーム数。 "},
+{ term: "time.day ", insert: "time.day ", label:"time.day ", description: "プレイヤーのコンピュータ上のローカルシステム時間。 "},
+{ term: "time.FormatCasual( ", insert: "time.FormatCasual($1) ", label:"time.FormatCasual(int) ", description: "フレーム数を、 1分 23秒 のような人間が読みやすい時間表現に変換する。第2パラメータは任意であり、trueを指定すると結果の制度が最大化される。 "},
+{ term: "time.FormatCasual( ", insert: "time.FormatCasual($1) ", label:"time.FormatCasual(int,bool) ", description: "フレーム数を、 1分 23秒 のような人間が読みやすい時間表現に変換する。第2パラメータは任意であり、trueを指定すると結果の制度が最大化される。 "},
+{ term: "time.FormatDigital( ", insert: "time.FormatDigital($1) ", label:"time.FormatDigital(int) ", description: "フレーム数を、 1:23 のような人間が読みやすいデジタル時計風の時間表現に変換する。第2パラメータは任意であり、trueを指定すると結果の制度が最大化される。 "},
+{ term: "time.FormatDigital( ", insert: "time.FormatDigital($1) ", label:"time.FormatDigital(int,bool) ", description: "フレーム数を、 1:23 のような人間が読みやすいデジタル時計風の時間表現に変換する。第2パラメータは任意であり、trueを指定すると結果の制度が最大化される。 "},
+{ term: "time.hour ", insert: "time.hour ", label:"time.hour ", description: "プレイヤーのコンピュータ上のローカルシステム時間。 "},
+{ term: "time.minute ", insert: "time.minute ", label:"time.minute ", description: "プレイヤーのコンピュータ上のローカルシステム時間。 "},
+{ term: "time.month ", insert: "time.month ", label:"time.month ", description: "プレイヤーのコンピュータ上のローカルシステム時間。 "},
+{ term: "time.msbn ", insert: "time.msbn ", label:"time.msbn ", description: "Unix時間をミリ秒単位で表す。(1970年1月1日00:00:00 UTC以降の経過時間)うるう秒は考慮されない。BigNumber型を返す。 "},
+{ term: "time.second ", insert: "time.second ", label:"time.second ", description: "プレイヤーのコンピュータ上のローカルシステム時間。 "},
+{ term: "time.year ", insert: "time.year ", label:"time.year ", description: "プレイヤーのコンピュータ上のローカルシステム時間。 "},
+{ term: "ToFloat() ", insert: "ToFloat() ", label:"b.ToFloat() ", description: "BigNumberを浮動小数点数に変換する。値が大きすぎたり小さすぎる場合はエラーが発生する。 戻り値：float"},
+{ term: "ToInt() ", insert: "ToInt() ", label:"b.ToInt() ", description: "BigNumberを整数に変換する。値が大きすぎたり小さすぎる場合はエラーが発生する。 戻り値：int"},
+{ term: "ToRGB(", insert: "ToRGB($1)", label:"color.ToRGB(string) ", description: "カラーコードをRGB(0~255の3つの整数)に変換する。 "},
+{ term: "ToString() ", insert: "ToString() ", label:"b.ToString() ", description: "BigNumberを文字列で返す。ストレージに保存する際に使用できる。戻り値：string"},
+{ term: "totalgp ", insert: "totalgp ", label:"totalgp ", description: "インベントリ内の ギアパワー の合計値。アイテムの星レベルやエンチャントボーナスから計算される。 "},
+{ term: "totaltime ", insert: "totaltime ", label:"totaltime ", description: "ボスエリアを含めた、現在のエリアで経過した合計フレーム数。 "},
+{ term: "ToUI() ", insert: "ToUI() ", label:"b.ToUI() ", description: "UIで使用するための短縮された数値表現を返す。戻り値：string"},
+{ term: "Type( ", insert: "Type($1) ", label:"Type(var) ", description: "変数の型を評価し、その型を文字列表現として返す。使用可能な型には、'string' 'int' 'bool' 'function' 'object' 'null'が含まれる。 "},
+{ term: "ui.AddAnim( ", insert: "ui.AddAnim($1) ", label:"ui.AddAnim(string) ", description: "ルートパネルにアニメーション(Anim)オブジェクトを追加する。 "},
+{ term: "ui.AddButton() ", insert: "ui.AddButton() ", label:"ui.AddButton() ", description: "ルートパネルにボタン(Button)オブジェクトを追加する。 "},
+{ term: "ui.AddPanel() ", insert: "ui.AddPanel() ", label:"ui.AddPanel() ", description: "ルートパネルにパネル(Panel)オブジェクトを追加する。パネルはほかの要素を格納するための重要なコンテナ型オブジェクト。 "},
+{ term: "ui.AddStyle() ", insert: "ui.AddStyle() ", label:"ui.AddStyle() ", description: "四角形の要素(パネルやボタンなど)の描画に使用できる新しいスタイルを追加する。新しいスタイルID番号を返す。同じスタイルが複数回追加されないように保護されており、その場合は何も変更されず、同じIDが返される。異なるスクリプトが ui.AddStyle() を呼び出す可能性があるため、スクリプトにスタイル番号をハードコーディングする代わりに、IDを変数として保存することを推奨する。 "},
+{ term: "ui.AddText( ", insert: "ui.AddText($1) ", label:"ui.AddText(string) ", description: "ルートパネルにテキスト(Text)オブジェクトを追加する。 "},
+{ term: "ui.AddText() ", insert: "ui.AddText() ", label:"ui.AddText() ", description: "ルートパネルにテキスト(Text)オブジェクトを追加する。 "},
+{ term: "ui.Clear() ", insert: "ui.Clear() ", label:"ui.Clear() ", description: "メインコンテナからすべてのUI要素を削除する。 "},
+{ term: "ui.OpenInv() ", insert: "ui.OpenInv() ", label:"ui.OpenInv() ", description: "インベントリ画面を開く。 "},
+{ term: "ui.OpenMind() ", insert: "ui.OpenMind() ", label:"ui.OpenMind() ", description: "明瞭の石を開く。 "},
+{ term: "ui.root ", insert: "ui.root ", label:"ui.root ", description: "UIツリー全体を構築する基盤となるUIオブジェクト。 "},
+{ term: "ui.ShowBanner( ", insert: "ui.ShowBanner($1) ", label:"ui.ShowBanner(str) ", description: "最大2つのメッセージを含むアニメーションバナーを表示する。ui.ShowBanner()が呼び出されるたびにバナーのアニメーションは再起動される。 "},
+{ term: "ui.ShowBanner( ", insert: "ui.ShowBanner($1) ", label:"ui.ShowBanner(str,str) ", description: "最大2つのメッセージを含むアニメーションバナーを表示する。ui.ShowBanner()が呼び出されるたびにバナーのアニメーションは再起動される。 "},
+{ term: "utc.day ", insert: "utc.day ", label:"utc.day ", description: "現在のUTC時間 "},
+{ term: "utc.hour ", insert: "utc.hour ", label:"utc.hour ", description: "現在のUTC時間 "},
+{ term: "utc.minute ", insert: "utc.minute ", label:"utc.minute ", description: "現在のUTC時間 "},
+{ term: "utc.month ", insert: "utc.month ", label:"utc.month ", description: "現在のUTC時間 "},
+{ term: "utc.second ", insert: "utc.second ", label:"utc.second ", description: "現在のUTC時間 "},
+{ term: "utc.year ", insert: "utc.year ", label:"utc.year ", description: "現在のUTC時間 "},
+{ term: "var ", insert: "var ", label:"var (variable) ", description: "数学、論理、文字列演算で使用できる変数を宣言する。変数の循環と挙動についての詳細は、他の言語と異なる可能性があるため、注意"},
+{ term: "visible ", insert: "visible ", label:"component.visible ", description: "コンポーネントの表示状態。デフォルト値は inherit 。使用可能値：'true' 'false' 'inherit' 'true'に設定すると、親の状態に関係なく表示する。'false'に設定すると、親の状態に関係なく非表示になる。'inherit'に設定すると、親の表示状態と連動する。 "},
+{ term: "w ", insert: "w ", label:"component.w ", description: "コンポーネントの幅。デフォルト値はオブジェクトの種類によって異なる。 "},
+{ term: "x ", insert: "x ", label:"component.x ", description: "コンポーネントのX座標。親要素の位置を基準とした相対位置。 "},
+{ term: "y ", insert: "y ", label:"component.y ", description: "コンポーネントのY座標。親要素の位置を基準とした相対位置。 "}
+];
 
-    // --- 新機能: カーソル位置の更新 ---
+
+
+
     function updateCursorInfo() {
         const text = editor.value;
         const pos = editor.selectionStart;
         const lines = text.substr(0, pos).split("\n");
         const row = lines.length;
-        const col = Array.from(lines[lines.length - 1]).length + 1; // 全角考慮
+        const col = Array.from(lines[row - 1]).length + 1;
         cursorPos.innerText = `行 ${row}, 列 ${col}`;
     }
+
+    function showSuggestions() {
+        const pos = editor.selectionStart;
+        const textBefore = editor.value.substring(0, pos);
+        const lastWord = textBefore.split(/[\s\n\?\:\=\>\<\!\(\)\[\]]+/).pop();
+
+        if (lastWord.length < 1) {
+            suggestionArea.innerHTML = '<div style="padding: 10px; font-size: 11px; color: #666; text-align: center;">入力候補</div>';
+            return;
+        }
+
+        const matches = dictionary.filter(item => item.term.startsWith(lastWord));
+        if (matches.length > 0) {
+            suggestionArea.innerHTML = "";
+            matches.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "suggestion-item";
+                div.innerHTML = `<span class="sugg-label">${item.label}</span><span class="sugg-desc">${item.description}</span>`;
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    insertWord(item.insert, lastWord);
+                };
+                suggestionArea.appendChild(div);
+            });
+        } else {
+            suggestionArea.innerHTML = '<div style="padding: 10px; font-size: 11px; color: #666; text-align: center;">なし</div>';
+        }
+    }
+
+//    function insertWord(word, lastWord) {
+//        const pos = editor.selectionStart;
+//        const start = pos - lastWord.length;
+//        const text = editor.value;
+//        editor.value = text.substring(0, start) + word + text.substring(pos);
+//        editor.selectionStart = editor.selectionEnd = start + word.length;
+//        editor.focus();
+//        handleInput();
+//    }
+
+    function insertWord(word, lastWord) {
+        const pos = editor.selectionStart;
+        const start = pos - lastWord.length;
+        const text = editor.value;
+
+        // 1. $1 の位置を探します
+        const placeholderIndex = word.indexOf("$1");
+        let targetCursorPos = start + word.length; // デフォルトは挿入文字列の末尾
+
+        let finalWord = word;
+        if (placeholderIndex !== -1) {
+            // 2. $1 を除去した、実際に挿入する文字列を作ります
+            finalWord = word.replace("$1", "");
+            // 3. 移動先のカーソル位置を計算します
+            targetCursorPos = start + placeholderIndex;
+        }
+
+        // 4. エディタのテキストを置き換えます
+        editor.value = text.substring(0, start) + finalWord + text.substring(pos);
+        
+        // 5. 計算した位置にカーソルを移動させます
+        editor.selectionStart = editor.selectionEnd = targetCursorPos;
+        editor.focus();
+        handleInput();
+    }
+
 
     function updateColors(text) {
         const colorRegex = /#([a-fA-F0-9]{6}|[a-fA-F0-9]{3}|red|blue|cyan|yellow|green|white|black|orange|purple|wood)\b/g;
@@ -119,29 +672,90 @@
         }).join('');
     }
 
+    function checkLines(text) {
+        const lines = text.split('\n');
+        let errors = [];
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (Array.from(line).length > 40) errors.push(`<span class="warning">L${i+1}: 40列超過</span>`);
+            if (line.includes('　')) errors.push(`<span class="warning">L${i+1}: 全角スペース</span>`);
+
+//            if (/[\?\:]|func\s|for\s/.test(line) && i + 1 < lines.length) {
+//                const currentIndent = (line.match(/^ */) || [""])[0].length;
+//                let nextIdx = i + 1;
+//                while (nextIdx < lines.length) {
+//                    if (lines[nextIdx].trim().length > 0 && !lines[nextIdx].trim().startsWith('//')) {
+//                        const nextIndent = (lines[nextIdx].match(/^ */) || [""])[0].length;
+//                        if (nextIndent <= currentIndent) errors.push(`<span class="warning">L${nextIdx + 1}: 字下げ不足</span>`);
+//                        break;
+//                    }
+//                    nextIdx++;
+//                }
+//            }
+            if (/[\?\:]|func\s|for\s/.test(line) && i + 1 < lines.length) {
+                const currentIndent = (line.match(/^ */) || [""])[0].length;
+                let nextIdx = i + 1;
+                while (nextIdx < lines.length) {
+                    const nextLineTrimmed = lines[nextIdx].trim(); // 前後の空白を消した文字列
+                    
+                    // 空行でなく、コメント行でなく、かつ「^」で始まっていない場合のみチェック対象にする
+                    if (nextLineTrimmed.length > 0 && !nextLineTrimmed.startsWith('//') && !nextLineTrimmed.startsWith('^')) {
+                        const nextIndent = (lines[nextIdx].match(/^ */) || [""])[0].length;
+                        if (nextIndent <= currentIndent) errors.push(`<span class="warning">L${nextIdx + 1}: 字下げ不足</span>`);
+                        break; // 有効な行をチェックしたのでループを抜ける
+                    }
+                    
+                    // もし「^」で始まる行だった場合は、その行のチェックをスキップしてさらに次の行を探します
+                    nextIdx++;
+                }
+            }
+        }
+        lineCounter.innerHTML = errors.length > 0 ? errors.join('') : `<span class="ok">✅ OK</span>`;
+    }
 
     function handleInput() {
         updateColors(editor.value);
         checkLines(editor.value);
         updateCursorInfo();
+        showSuggestions();
     }
 
-    // 複数のイベントを監視してカーソル位置を逃さない
     editor.addEventListener('input', handleInput);
-    editor.addEventListener('click', updateCursorInfo);
-    editor.addEventListener('keyup', updateCursorInfo);
+    editor.addEventListener('click', handleInput);
+    editor.addEventListener('keyup', (e) => {
+        if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Backspace"].includes(e.key)) handleInput();
+    });
 
     function togglePreview() {
         contentArea.style.display = (contentArea.style.display === 'none' || contentArea.style.display === '') ? 'block' : 'none';
     }
+
+//    async function loadList() {
+//        try {
+//            const res = await fetch(API);
+//            const data = await res.json();
+//            const select = document.getElementById("fileList");
+//            select.innerHTML = data.filter(f => f.type === "file").map(f => `<option value="${f.path}">${f.name}</option>`).join('');
+//        } catch { console.error("List error"); }
+//    }
 
     async function loadList() {
         try {
             const res = await fetch(API);
             const data = await res.json();
             const select = document.getElementById("fileList");
-            select.innerHTML = data.filter(f => f.type === "file").map(f => `<option value="${f.path}">${f.name}</option>`).join('');
-        } catch { alert("リスト取得失敗"); }
+            
+            // 1. まずファイルだけに絞り込みます
+            const files = data.filter(f => f.type === "file");
+            
+            // 2. ファイル名（name）の昇順で並び替えます
+            files.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+            
+            // 3. 並び替えたデータをプルダウンに反映します
+            select.innerHTML = files.map(f => `<option value="${f.path}">${f.name}</option>`).join('');
+        } catch { 
+            console.error("List error"); 
+        }
     }
 
     async function loadFile() {
@@ -149,71 +763,15 @@
         const url = `https://raw.githubusercontent.com/ryuubokusub1/stone_story_rpg/main/${path}`;
         try {
             const res = await fetch(url);
-            const text = await res.text();
-            contentArea.value = text;
-            //editor.value = text; 下側には貼り付けない
-            handleInput();
+            contentArea.value = await res.text();
+            alert("データを読み込みました。\n表示切替ボタンを押下してください。");
         } catch { alert("取得失敗"); }
     }
 
     function OpenURL() {
         const path = document.getElementById("fileList").value;
-        window.open(`https://github.com/ryuubokusub1/stone_story_rpg/edit/main/${path}`, '_blank');
+        if(path) window.open(`https://github.com/ryuubokusub1/stone_story_rpg/edit/main/${path}`, '_blank');
     }
-
-
-
-
-
-function checkLines(text) {
-    const lines = text.split('\n');
-    let errors = [];
-    
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const lineNum = i + 1;
-        
-        // --- 1. 基本チェック (40列、全角) ---
-        const charCount = Array.from(line).length;
-        if (charCount > 40) {
-            errors.push(`<span class="warning">L${lineNum}: 40列超過(${charCount}字)</span>`);
-        }
-        if (line.includes('　')) {
-            errors.push(`<span class="warning">L${lineNum}: 全角スペースあり</span>`);
-        }
-
-        // --- 2. ブロック構造のチェック ---
-        // 行末、または末尾のコメント前に ?, :, func, for があるか
-        const isBlockHeader = /[\?\:]|func\s|for\s/.test(line);
-        
-        if (isBlockHeader && i + 1 < lines.length) {
-            const currentIndent = line.match(/^ */)[0].length;
-            
-            // 次の行から「空行でもコメントでもない行」を探す
-            let nextLineIndex = i + 1;
-            while (nextLineIndex < lines.length) {
-                const nextLine = lines[nextLineIndex];
-                if (nextLine.trim().length > 0 && !nextLine.trim().startsWith('//')) {
-                    const nextIndent = nextLine.match(/^ */)[0].length;
-                    
-                    if (nextIndent <= currentIndent) {
-                        errors.push(`<span class="warning">L${nextLineIndex + 1}: 字下げ不足</span>`);
-                    }
-                    break; // 有効な行をチェックしたら終了
-                }
-                nextLineIndex++;
-            }
-        }
-    }
-
-    if (errors.length > 0) {
-        lineCounter.innerHTML = `⚠️ 要確認:<br>${errors.join('<br>')}`;
-    } else {
-        lineCounter.innerHTML = `<span class="ok">✅ All lines OK</span>`;
-    }
-}
-
-
 
     loadList();
 </script>
