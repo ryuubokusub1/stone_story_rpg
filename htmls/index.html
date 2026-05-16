@@ -103,12 +103,18 @@
         }
 
         /* 📱 スマホ横画面：左右並びで高さを節約 */
-        @media (max-height: 500px) and (orientation: landscape) {
-            #editor { height: 50vh; min-height: 150px; }
-            #suggestion-area { width: 180px; height: auto; }
-            h2 { font-size: 16px; margin: 5px 0; }
-            .github-box { padding: 8px; margin-bottom: 8px; }
-        }
+        /* 📱 スマホ横画面：左右並びで高さを節約 */
+@media (max-height: 500px) and (orientation: landscape) {
+    #editor { height: 50vh; min-height: 150px; }
+    #suggestion-area { 
+        width: 180px; 
+        height: 50vh; /* 💡 エディタと同じ高さに固定することで、スクロールが効くようになります！ */
+        min-height: 150px; 
+    }
+    h2 { font-size: 16px; margin: 5px 0; }
+    .github-box { padding: 8px; margin-bottom: 8px; }
+}
+
     </style>
 </head>
 <body>
