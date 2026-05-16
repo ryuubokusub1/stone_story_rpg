@@ -1,0 +1,32 @@
+·:·:· アイテム能力のクールダウンID ·:·:·
+
+アイテム
+-------	クールダウンID
+------------	
+エーテルのお守り	"talisman_aether"
+バルディッシュ	"bardiche"
+ツッコミシールド	"bash"
+堕神の剣	"blade"
+燃えカス	"cinderwisp"
+カルト団員のマスク	"mask"
+ダッシュの盾	"dash"
+火のお守り	"talisman_fire"
+手斧	"hatchet"
+ヘビーハンマー	"heavy_hammer"
+明瞭の石	"mind"
+六尺棒	"quarterstaff"
+ガイコツの腕	"skeleton_arm"
+虚無織り	"voidweaver"
+災いの杖	"wand_aether"
+爆発の杖	"wand_fire"
+氷結の杖	"wand_ice"
+疫病の杖	"wand_poison"
+リセットの杖	"wand_vigor"
+重力の杖	"wand_stone"
+強欲の杖	"staff_aether"
+地獄の杖	"staff_fire"
+とこしえの杖	"staff_ice"
+狂戦士の杖	"staff_poison"
+防護の杖	"staff_vigor"
+曲芸の杖	"staff_stone"
+シャベル	"shovel"
