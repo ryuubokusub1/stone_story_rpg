@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StoneScript Editor</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body { 
+            background: #121212; color: #e0e0e0; 
+            font-family: 'Consolas', 'Courier New', monospace; 
+            margin: 0; padding: 10px;
+            display: flex; justify-content: center;
+        }
+
+        .container { 
+            width: 100%;
+            max-width: 1000px;
+        }
+        
+        .github-box { 
+            margin-bottom: 15px; background: #1e1e1e; 
+            padding: 12px; border-radius: 8px; 
+            border: 1px solid #333;
+        }
+        .github-box div { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .github-box select { background: #333; color: #fff; border: 1px solid #555; padding: 8px; flex: 1; min-width: 150px; border-radius: 4px; font-size: 14px; }
+        .github-box button { background: #444; color: white; border: none; padding: 10px 14px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 14px; }
+        .github-box button.primary { background: #007bff; }
+
+        /* レイアウト */
+        .editor-main-layout {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        textarea { 
+            background: #000; color: #fff; 
+            border: 2px solid #333; border-radius: 4px;
+            padding: 12px; font-size: 16px; line-height: 1.4;
+            font-family: inherit;
+            outline: none;
+        }
+        textarea:focus { border-color: #007bff; }
+        
+        /* 🚩 PC・横画面時の基本高さ */
+        #editor { 
+            flex: 1; 
+            height: 65vh; 
+            min-height: 400px;
+        }
+
+        /* Rawデータエリア */
+        #content { width: 100%; height: 120px; margin-bottom: 10px;}
+
+
+        /* 📱 スマホ縦画面：エディタを最優先 */
+        @media (max-width: 600px) and (orientation: portrait) {
+            .editor-main-layout { flex-direction: column; gap: 5px; }
+            
+            #editor { 
+                width: 100%; 
+                height: 60vh; /* 🚩 Raw枠より圧倒的に広く確保 */
+                min-height: 350px; 
+            }
+            
+            #suggestion-area { 
+                width: 100%; 
+                height: 90px; /* 🚩 候補はスリム化して邪魔しないように */
+            }
+            
+            .github-box div { flex-direction: column; align-items: stretch; }
+            .status-box { border-right: none; border-bottom: 1px solid #222; padding-bottom: 8px; width: 100%; }
+        }
+
+        /* 📱 スマホ横画面：左右並びで高さを節約 */
+        @media (max-height: 500px) and (orientation: landscape) {
+            #editor { height: 50vh; min-height: 150px; }
+            #suggestion-area { width: 180px; height: auto; }
+            h2 { font-size: 16px; margin: 5px 0; }
+            .github-box { padding: 8px; margin-bottom: 8px; }
+        }
+    </style>
+</head>
+<body>
+<div>
+            <select id="fileList"></select>
+            <button class="primary" onclick="loadFile()">読み込み</button><br>
+    <textarea id="content" placeholder="ここにRawデータが読み込まれます"></textarea>
+</div>
+<script>
+    const API = "https://script.google.com/macros/s/AKfycbzr6KElBAp7ROHRG6RMIoWYYhihl2DMVZ44kyahYbNNXznvdJCCn5On2mW2rAzRb1OfrQ/exec";
+    const editor = document.getElementById('editor');
+    const contentArea = document.getElementById('content');
+async function loadList() {
+    try {
+        // 🚩 URLの末尾に ?ref=save を付けて、saveブランチのリストを要求します
+        const res = await fetch(`${API}?ref=save`);
+        const data = await res.json();
+        const select = document.getElementById("fileList");
+        
+        const files = data.filter(f => f.type === "file");
+        files.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+        
+        select.innerHTML = files.map(f => `<option value="${f.path}">${f.name}</option>`).join('');
+    } catch { 
+        console.error("List error"); 
+    }
+}
+
+async function loadFile() {
+    const path = document.getElementById("fileList").value;
+    
+    // 🚩 固定値ではなく、プルダウンで選んだ path を使うように修正します
+    // 日本語のファイル名にも対応できるように encodeURIComponent を挟みます
+    const url = `https://raw.githubusercontent.com/ryuubokusub1/stone_story_rpg/save/${encodeURIComponent(path)}?_=${Date.now()}`;
+    
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(); // 404などのエラーをキャッチします
+        contentArea.value = await res.text();
+        alert("データを読み込みました。\n表示切替ボタンを押下してください。");
+    } catch { 
+        alert("取得失敗。ファイルが存在しないか、URLが正しくありません。"); 
+    }
+}
+
+    loadList();
+</script>
+
+</body>
+</html>
