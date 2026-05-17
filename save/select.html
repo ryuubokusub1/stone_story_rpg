@@ -94,25 +94,20 @@
     const API = "https://script.google.com/macros/s/AKfycbz43AguuJGhx0mHaJ0D12H-f8rtls-mntsGqpBP8rCq8yX_Jvz_J7g9KyvNSeDfO5VRfQ/exec";
     const editor = document.getElementById('editor');
     const contentArea = document.getElementById('content');
-async function loadFile() {
-    const path = document.getElementById("fileList").value;
-    if (!path) return;
-
-    // 🚩 encodeURIComponent は「ファイル名」の部分だけに適用する必要があります。
-    // path には既に "save/xxx.txt" が入っているので、そのまま結合するのが正解です。
-    // ただし、日本語ファイル名に対応するため、スラッシュを除いた部分を処理します。
-    const safePath = path.split('/').map(part => encodeURIComponent(part)).join('/');
-    
-    const url = `https://raw.githubusercontent.com/ryuubokusub1/stone_story_rpg/main/${safePath}?_=${Date.now()}`;
-    
+async function loadList() {
     try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        contentArea.value = await res.text();
-        alert("データを読み込みました。");
-    } catch (e) { 
-        console.error("Fetch error:", e);
-        alert("取得失敗。ブランチ名が 'main' ではないか、ファイルへのパスが正しくありません。"); 
+        // 🚩 GAS側でフォルダを指定したので、ここはパラメータ無しのシンプルなAPI呼び出しに戻します
+        const res = await fetch(API);
+        const data = await res.json();
+        const select = document.getElementById("fileList");
+        
+        const files = data.filter(f => f.type === "file");
+        files.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+        
+        // f.path には「save/ファイル名.txt」が入るので、valueにはそのまま f.path を使います
+        select.innerHTML = files.map(f => `<option value="${f.path}">${f.name}</option>`).join('');
+    } catch { 
+        console.error("List error"); 
     }
 }
 
