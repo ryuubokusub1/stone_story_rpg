@@ -105,9 +105,9 @@ async function loadList() {
         files.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
         
         select.innerHTML = files.map(f => `<option value="${f.path}">${f.name}</option>`).join('');
-    } catch { 
-        console.error("List error"); 
-    }
+} catch (error) { 
+        console.error("List errorの詳細:", error); 
+    }    }
 }
 
 async function loadFile() {
