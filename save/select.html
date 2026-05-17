@@ -91,45 +91,36 @@
     <textarea id="content" placeholder="ここにRawデータが読み込まれます"></textarea>
 </div>
 <script>
-    const API = "https://script.google.com/macros/s/AKfycbzWA3zdzWX5JU8F4Ry7R5Ia0uPnT6haQMdKb1Pa5TO6kAw5fMSRyLnMyc6LFlXGRJM9Ow/exec";
+    const API = "https://script.google.com/macros/s/AKfycbz43AguuJGhx0mHaJ0D12H-f8rtls-mntsGqpBP8rCq8yX_Jvz_J7g9KyvNSeDfO5VRfQ/exec";
     const editor = document.getElementById('editor');
     const contentArea = document.getElementById('content');
 async function loadList() {
     try {
-        const res = await fetch(`${API}?ref=save`);
+        // 🚩 GAS側でフォルダを指定したので、ここはパラメータ無しのシンプルなAPI呼び出しに戻します
+        const res = await fetch(API);
         const data = await res.json();
-        
-        // 🚩 原因究明のために、届いた生データをコンソールに表示します
-        console.log("GASから届いた実際のデータ:", data);
-
         const select = document.getElementById("fileList");
-        
-        // 配列のときだけ処理するように安全策を入れます
-        if (!Array.isArray(data)) {
-            console.error("データが配列ではありません。GAS側でエラーが発生している可能性があります。");
-            return;
-        }
         
         const files = data.filter(f => f.type === "file");
         files.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
         
+        // f.path には「save/ファイル名.txt」が入るので、valueにはそのまま f.path を使います
         select.innerHTML = files.map(f => `<option value="${f.path}">${f.name}</option>`).join('');
-    } catch (error) { 
-        console.error("List errorの詳細:", error); 
+    } catch { 
+        console.error("List error"); 
     }
 }
-
 
 async function loadFile() {
     const path = document.getElementById("fileList").value;
     
-    // 🚩 固定値ではなく、プルダウンで選んだ path を使うように修正します
-    // 日本語のファイル名にも対応できるように encodeURIComponent を挟みます
-    const url = `https://raw.githubusercontent.com/ryuubokusub1/stone_story_rpg/save/${encodeURIComponent(path)}?_=${Date.now()}`;
+    // 🚩 raw.githubusercontent.com の後ろは、デフォルトブランチ名（main か master）にします
+    // path の中に「save/ファイル名.txt」が含まれているので、これで正しくアクセスできます
+    const url = `https://raw.githubusercontent.com/ryuubokusub1/stone_story_rpg/main/${encodeURIComponent(path)}?_=${Date.now()}`;
     
     try {
         const res = await fetch(url);
-        if (!res.ok) throw new Error(); // 404などのエラーをキャッチします
+        if (!res.ok) throw new Error();
         contentArea.value = await res.text();
         alert("データを読み込みました。\n表示切替ボタンを押下してください。");
     } catch { 
