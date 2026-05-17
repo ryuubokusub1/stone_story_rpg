@@ -96,18 +96,28 @@
     const contentArea = document.getElementById('content');
 async function loadList() {
     try {
-        // 🚩 URLの末尾に ?ref=save を付けて、saveブランチのリストを要求します
         const res = await fetch(`${API}?ref=save`);
         const data = await res.json();
+        
+        // 🚩 原因究明のために、届いた生データをコンソールに表示します
+        console.log("GASから届いた実際のデータ:", data);
+
         const select = document.getElementById("fileList");
+        
+        // 配列のときだけ処理するように安全策を入れます
+        if (!Array.isArray(data)) {
+            console.error("データが配列ではありません。GAS側でエラーが発生している可能性があります。");
+            return;
+        }
         
         const files = data.filter(f => f.type === "file");
         files.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
         
         select.innerHTML = files.map(f => `<option value="${f.path}">${f.name}</option>`).join('');
-} catch (error) { 
+    } catch (error) { 
         console.error("List errorの詳細:", error); 
-    }    }
+    }
+}
 
 
 async function loadFile() {
