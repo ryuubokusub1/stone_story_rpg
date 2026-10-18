@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#16171a">
+<title>Stone Script Editor</title>
+<style>
+:root{--bg:#16171a;--panel:#1e2024;--line:#2c2f35;--tx:#d9d5cc;--dim:#8a8f98;--acc:#e3a857;--fs:16px;--lh:24px;
+--mono:ui-monospace,"SF Mono",Menlo,Consolas,"Noto Sans Mono CJK JP",monospace}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg);color-scheme:dark}
+body{margin:0;position:fixed;top:0;left:0;right:0;height:var(--vh,100dvh);display:flex;flex-direction:column;
+background:var(--bg);color:var(--tx);font:14px/1.5 -apple-system,"Hiragino Sans",system-ui,sans-serif;overflow:hidden;
+padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);-webkit-text-size-adjust:100%}
+button{font-family:inherit;color:inherit;cursor:pointer}
+
+header{display:flex;align-items:center;gap:8px;height:46px;padding:0 10px;border-bottom:1px solid var(--line);flex:none}
+.logo{font-weight:700;letter-spacing:.04em}.logo span{color:var(--acc)}.logo small{color:var(--dim);font-weight:400}
+.sp{flex:1}#st{color:var(--dim);font:12px var(--mono)}
+header button{background:#25282d;border:1px solid var(--line);border-radius:8px;padding:5px 11px;font-size:13px}
+
+main{flex:1;min-height:0;display:flex;background:#121316}
+#g{flex:none;overflow:hidden;background:#17181b;border-right:1px solid var(--line);padding:0 8px 0 10px;text-align:right;user-select:none}
+#gi{margin:0;padding:10px 0;font:var(--fs)/var(--lh) var(--mono);color:#555a63}
+.code{position:relative;flex:1;overflow:hidden}
+#hl,#ed{margin:0;border:0;padding:10px 14px 40vh 10px;font:var(--fs)/var(--lh) var(--mono);white-space:pre;tab-size:2;letter-spacing:0;word-spacing:0}
+#hl{position:absolute;top:0;left:0;pointer-events:none;will-change:transform;color:var(--tx)}
+#ed{position:absolute;inset:0;width:100%;height:100%;resize:none;outline:none;overflow:auto;background:transparent;
+color:transparent;-webkit-text-fill-color:transparent;caret-color:var(--acc);-webkit-overflow-scrolling:touch;border-radius:0}
+#ed::selection{background:rgba(227,168,87,.32)}
+.c{color:#6b7280;font-style:italic}.p{color:#98c379}.s{color:#a3be8c}.i{color:#e5c07b}.col{color:#d19a66}.n{color:#d19a66}
+.q{color:#e06c75;font-weight:700}.k{color:#c678dd}.ns{color:#61afef}.m{color:#56b6c2}
+
+aside{flex:none;display:flex;flex-direction:column;background:var(--panel);border-top:1px solid var(--line)}
+#chips{display:flex;gap:6px;overflow-x:auto;padding:8px 10px;min-height:54px;align-items:stretch;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#chips::-webkit-scrollbar{display:none}
+.chip{flex:none;max-width:70vw;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:0;
+background:#25282d;border:1px solid var(--line);border-left:3px solid var(--kc,#888);border-radius:8px;padding:3px 10px;font:13px var(--mono);text-align:left}
+.chip i{font:normal 11px -apple-system,"Hiragino Sans",sans-serif;color:var(--dim);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.on{border-color:var(--acc);background:#33291a}
+.fn{--kc:#61afef}.prop{--kc:#56b6c2}.enemy{--kc:#e06c75}.filter{--kc:#c678dd}.import{--kc:#98c379}.item{--kc:#e5c07b}.comment{--kc:#6b7280}
+.none{color:var(--dim);font-size:13px;align-self:center}
+#detail{max-height:30vh;overflow:auto;padding:8px 12px 10px;border-top:1px solid var(--line);-webkit-overflow-scrolling:touch}
+.collapsed #detail{display:none}
+.dh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dh b{font:600 14px var(--mono)}.ret{color:var(--dim);font:12px var(--mono)}
+.badge{font-size:11px;padding:1px 7px;border-radius:99px;background:var(--kc,#888);color:#111;font-weight:700}
+#ins{margin-left:auto;background:var(--acc);color:#1a1205;border:0;border-radius:8px;padding:5px 14px;font-weight:700}
+#detail p{margin:6px 0;white-space:pre-wrap}
+pre.ex{margin:6px 0;background:#121316;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:13px/1.5 var(--mono);overflow:auto;white-space:pre}
+.ins{color:var(--dim);font:12px var(--mono);word-break:break-all}
+
+nav{flex:none;display:flex;gap:6px;overflow-x:auto;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:#1b1d21;border-top:1px solid var(--line);scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.kb nav{padding-bottom:6px}
+nav button{flex:none;min-width:42px;height:38px;border:0;border-radius:8px;background:#2a2d33;font:16px var(--mono)}
+nav button:active,.chip:active{filter:brightness(1.4)}
+#toast{position:fixed;left:50%;top:60px;transform:translateX(-50%);background:#000c;padding:6px 14px;border-radius:99px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.on{opacity:1}
+
+@media(min-width:900px){
+body{display:grid;grid-template-columns:1fr 380px;grid-template-rows:auto minmax(0,1fr) auto}
+header{grid-column:1/-1}aside{grid-column:2;grid-row:2/4;border-left:1px solid var(--line);border-top:0;min-height:0}
+#chips{flex-direction:column;overflow-x:hidden;overflow-y:auto;max-height:42%;flex:none}
+.chip{max-width:none;width:100%;flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+#detail{max-height:none;flex:1}.collapsed #detail{display:block}#tg{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span>◆</span> Stone Script <small>Editor</small></div>
+  <div class="sp"></div><span id="st">Ln 1, Col 1</span>
+  <button id="bcopy">コピー</button><button id="bclr">クリア</button>
+</header>
+<main>
+  <div id="g"><pre id="gi">1</pre></div>
+  <div class="code">
+    <pre id="hl" aria-hidden="true"></pre>
+    <textarea id="ed" wrap="off" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="コード入力"></textarea>
+  </div>
+</main>
+<aside id="panel">
+  <div id="chips"></div>
+  <div id="detail"></div>
+</aside>
+<nav id="keys">
+  <button data-a="untab">⇤</button><button data-a="tab">⇥</button><button data-a="undo">↶</button><button data-a="redo">↷</button>
+  <button data-t="?">?</button><button data-t=":">:</button><button data-t=">">&gt;</button>
+  <button data-t="@@" data-b="1">@@</button><button data-t="()" data-b="1">( )</button><button data-t="''" data-b="1">' '</button>
+  <button data-t="[]" data-b="1">[ ]</button><button data-t="=">=</button><button data-t=".">.</button><button data-t="// ">//</button>
+  <button data-a="info" id="tg">ⓘ</button><button data-a="done">完了</button>
+</nav>
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   ★ スニペット定義
+   元ファイルの「const snippets = [ ... ];」の中身をそっくりここに貼り替えてください。
+   （下はサンプルです。形式は元のままで動きます）
+   ============================================================ */
+        const snippets = [
+            { key: ".absoluteX", insert: "absoluteX", desc: " 戻り値:integer\n画面に対するコンポーネントの絶対X位置を示します（読み取り専用）。\n\n var t\n?loc.begin\n  var p = ui.AddPanel()\n  p.anchor = bottom_right\n  p.dock = bottom_right\n  t = ui.AddText('Foo')\n  p.Add(t)\n>`0,2,Absolute pos = @t.absoluteX@,@t.absoluteY@\n// 絶対X位置を表示" },
+            { key: ".absoluteY", insert: "absoluteY", desc: " 戻り値:integer\n画面に対するコンポーネントの絶対Y位置を示します（読み取り専用）。\n\n var t\n?loc.begin\n  var p = ui.AddPanel()\n  p.anchor = bottom_right\n  p.dock = bottom_right\n  t = ui.AddText('Foo')\n  p.Add(t)\n>`0,2,Absolute pos = @t.absoluteX@,@t.absoluteY@\n// 絶対Y位置を表示" },
+            { key: ".Add", insert: "Add($1)", desc: " 戻り値:なし\nコンポーネントをパネルに追加します。コンポーネントはパネルの子となり、パネルはその親となります。追加順序は描画順に影響します。\n\n ?loc.begin\n  var p = ui.AddPanel()\n  var t = ui.AddText('Hello')\n  p.Add(t)\n// パネルにテキストを追加" },
+            { key: ".Add", insert: "Add($1)", desc: " 戻り値:なし\nコンポーネントをパネルの指定したソート位置に追加します。整数パラメータがない場合は最後の子として追加されます。\n\n ?loc.begin\n  var p = ui.AddPanel()\n  var t = ui.AddText('Hello')\n  p.Add(t, 0)\n// パネルの先頭にテキストを追加" },
+            { key: ".Add", insert: "Add($1)", desc: " 戻り値:自身\nBigNumberに数を加算します（+）。\n\n var bn = math.BigNumber(12)\nbn.Add(5)\n>@bn@\n// 17" },
+            { key: ".Add", insert: "Add($1)", desc: " 戻り値:なし\n配列の末尾に新しい値またはオブジェクトを追加します。\n\n var myArray = []\nmyArray.Add(10)\n// 配列に10を追加" },
+            { key: ".AddLayer", insert: "AddLayer($1)", desc: " 戻り値:Anim\nこのアニメーションの上に新しいASCIIスプライトを追加します。再生中はすべてのレイヤーが同期します。\n\n var a = ui.AddAnim(asciiArtA)\nvar layer2 = a.AddLayer(asciiArtB)\nlayer2.color = '#bbbbbb'\n// レイヤーを追加し色を設定" },
+            { key: ".anchor", insert: "anchor", desc: " 戻り値:string\nコンポーネントの内部ピボットを表す自動レイアウトプロパティです。デフォルトは'center_center'。可能な値: top_left, top_center, top_right, center_left, center_center, center_right, bottom_left, bottom_center, bottom_right。\n\n ?loc.begin\n  var p = ui.AddPanel()\n  p.anchor = top_right\n// パネルのアンカーを右上に設定" },
+            { key: ".ax", insert: "ax", desc: " 戻り値:string\nアンカーのX部分を示します。可能な値: left, center, right。\n\n var p\n?loc.begin\n  p = ui.AddPanel()\n  p.ax = right\n// アンカーのXを右に設定" },
+            { key: ".ay", insert: "ay", desc: " 戻り値:string\nアンカーのY部分を示します。可能な値: top, center, bottom。\n\n var p\n?loc.begin\n  p = ui.AddPanel()\n  p.ay = top\n// アンカーのYを上に設定" },
+            { key: ".bcolor", insert: "bcolor", desc: " 戻り値:string\nボタンの境界線の色をRGB16進数形式で示します。\n\n >@button.bcolor@\nbutton.bcolor = '#880000'\n// 境界線の色を表示し、暗赤色に設定" },
+            { key: ".blend", insert: "blend", desc: " 戻り値:string\nキャンバスが背後の要素と合成されるときのブレンドモードを示します。可能な値: Opaque, Multiply, Divide, Add, Subtract。デフォルトは'opaque'。\n\n var filter1 = ui.AddCanvas()\nfilter1.w = screen.w\nfilter1.h = screen.h\nfilter1.blend = 'multiply'\n// ブレンドモードをmultiplyに設定" },
+            { key: ".children", insert: "children", desc: " 戻り値:Component[]\npanel.Add()でパネルに追加されたすべての子コンポーネントを含む配列。\n\n var children = panel.children\n// 子コンポーネントの配列を取得" },
+            { key: ".Clear", insert: "Clear()", desc: " 戻り値:なし\n配列からすべての要素を削除し、空にします。配列を再宣言するよりも効率的です。\n\n var myArray = [10, 3]\nmyArray.Clear()\n// 配列を空にする" },
+            { key: ".Clear", insert: "Clear()", desc: " 戻り値:なし\nパネルからすべてのUI要素を削除します。削除されたコンポーネントはUIシステムでリサイクルされ、将来のui.Add_()呼び出しで再利用されます。\n\n panel.Clear()\n// パネルの子要素をすべてクリア" },
+            { key: ".clip", insert: "clip", desc: " 戻り値:bool\nパネルの境界を使用して子コンポーネントの描画を制限するかどうかを示します。trueの場合、パネルの境界外の部分は描画されません。\n\n var p\n?loc.begin\n  p = ui.AddPanel()\n  p.w = 4\n  p.h = 3\n  var t = ui.AddText('The quick brown fox jumps\\n^ over the lazy dog.')\n  p.Add(t)\n?time%30 < 15\n  p.clip = true\n:\n  p.clip = false\n// クリッピングを切り替え" },
+            { key: ".color", insert: "color", desc: " 戻り値:string\nパネルの色をRGB16進数形式で示します。\n\n panel.color = '#ff0000'\n// パネルの色を赤に設定" },
+            { key: ".color", insert: "color", desc: " 戻り値:string\nアニメーションの色をRGB16進数形式で示します。\n\n anim.color = '#bbbbbb'\n// アニメーションの色を灰色に設定" },
+            { key: ".Contains", insert: "Contains($1)", desc: " 戻り値:bool\n指定した値が配列内にあるかを判定します。見つかれば真、そうでなければ偽を返します。\n\n var myArray = [10, 3]\n?myArray.Contains(3)\n  >Yes\n// 3が配列にあるか確認" },
+            { key: ".Count", insert: "Count()", desc: " 戻り値:int\n配列内の要素数を返します。\n\n var myArray = ['apple', 'banana']\nvar size = myArray.Count()\n>Array size = @size@\n// 配列のサイズを表示" },
+            { key: ".Div", insert: "Div($1)", desc: " 戻り値:自身\nBigNumberを数で除算します（/）。\n\n var myBigNum1 = math.BigNumber(12)\nmyBigNum1.Div(5)\n>@myBigNum1@\n// 2" },
+            { key: ".dock", insert: "dock", desc: " 戻り値:string\nコンポーネントの外部ピボットまたは親内の位置を表す自動レイアウトプロパティです。アンカーと同じ値を使用するのが一般的です。\n\n ?loc.begin\n  var p = ui.AddPanel()\n  p.dock = top_right\n// パネルのドックを右上に設定" },
+            { key: ".duration", insert: "duration", desc: " 戻り値:int\nアニメーションの時間長さをフレーム単位で示します。\n\n anim.duration = 20\n// アニメーションの長さを20フレームに設定" },
+            { key: ".dx", insert: "dx", desc: " 戻り値:string\nドックのX部分を示します。可能な値: left, center, right。\n\n var p\n?loc.begin\n  p = ui.AddPanel()\n  p.dx = right\n// ドックのXを右に設定" },
+            { key: ".dy", insert: "dy", desc: " 戻り値:string\nドックのY部分を示します。可能な値: top, center, bottom。\n\n var p\n?loc.begin\n  p = ui.AddPanel()\n  p.dy = top\n// ドックのYを上に設定" },
+            { key: ".Emplace", insert: "Emplace($1)", desc: " 戻り値:なし\n指定した位置の値を新しい値で置き換えます。\n\n var myArray = [10, 3]\nmyArray.Emplace(0, 4)\nvar value = myArray[0]\n>Value at [0] is now @value@\n// インデックス0を4に置き換え" },
+            { key: ".Eq", insert: "Eq($1)", desc: " 戻り値:bool\nBigNumberが数と等しいかを判定します（=）。\n\n var bn = math.BigNumber(5)\n>@bn.Eq(5)@ @bn.Eq(3)@\n// true false" },
+            { key: ".flipX", insert: "flipX", desc: " 戻り値:bool\n真の場合、アートをピボット上で水平に反転します。\n\n anim.flipX = true\n// アニメーションを水平反転" },
+            { key: ".flipY", insert: "flipY", desc: " 戻り値:bool\n真の場合、アートをピボット上で垂直に反転します。\n\n anim.flipY = true\n// アニメーションを垂直反転" },
+            { key: ".frame", insert: "frame", desc: " 戻り値:int\n現在描画中のアニメーションフレームを示します。特定のフレームに設定するために変更可能です。\n\n anim.frame = 5\n// アニメーションを5フレーム目に設定" },
+            { key: ".gamePause", insert: "gamePause", desc: " 戻り値:bool\n真の場合、プレイヤーがゲームを一時停止するとアニメーションの再生が自動的に停止し、再開時に再生が再開します。\n\n anim.gamePause = true\n// ゲーム一時停止に連動" },
+            { key: ".Ge", insert: "Ge($1)", desc: " 戻り値:bool\nBigNumberが数以上かを判定します（>=）。\n\n var bn = math.BigNumber(5)\n>@bn.Ge(3)@ @bn.Ge(5)@\n// true true" },
+            { key: ".Get", insert: "Get($1)", desc: " 戻り値:string\nキャンバスの特定の位置(x, y)のグリフを返します。\n\n var glyph = canvas.Get(0, 0)\n// (0,0)のグリフを取得" },
+            { key: ".Gt", insert: "Gt($1)", desc: " 戻り値:bool\nBigNumberが数より大きいかを判定します（>）。\n\n var bn = math.BigNumber(5)\n>@bn.Gt(3)@ @bn.Gt(10)@\n// true false" },
+            { key: ".h", insert: "h", desc: " 戻り値:integer\nコンポーネントの高さを示します。デフォルト値は5です。\n\n panel.h = panel.parent.h\n// パネルの高さを親パネルの高さに設定" },
+            { key: ".hcolor", insert: "hcolor", desc: " 戻り値:string\nボタンが押されたときのハイライト色をRGB16進数形式で示します。\n\n ?loc.begin\n  var b = ui.AddButton()\n  b.hcolor = '#yellow'\n// ハイライト色を黄色に設定" },
+            { key: ".IndexOf", insert: "IndexOf($1)", desc: " 戻り値:int\n配列内で指定した値を探し、最初に見つかった位置を示す整数を返します。見つからない場合は-1を返します。\n\n var myArray = [10, 3]\nvar index = myArray.IndexOf(3)\n>Found at position @index@\n// 3の位置を表示" },
+            { key: ".Insert", insert: "Insert($1)", desc: " 戻り値:なし\n配列の指定した位置に新しい値またはオブジェクトを追加します。右側の要素は次の位置にシフトします。\n\n var myArray = [10, 3]\nmyArray.Insert(1, 'apple')\n// 配列は [10, 'apple', 3] になる" },
+            { key: ".Le", insert: "Le($1)", desc: " 戻り値:bool\nBigNumberが数以下かを判定します（<=）。\n\n var bn = math.BigNumber(5)\n>@bn.Le(10)@ @bn.Le(5)@\n// true true" },
+            { key: ".Load", insert: "Load($1)", desc: " 戻り値:なし\n新しいASCIIスプライトシートを割り当てます。\n\n anim.Load(asciiArt)\n// 新しいスプライトシートをロード" },
+            { key: ".loop", insert: "loop", desc: " 戻り値:bool\n真の場合、アニメーションが終了すると最初から再開します。\n\n anim.loop = true\n// アニメーションをループ再生" },
+            { key: ".Lt", insert: "Lt($1)", desc: " 戻り値:bool\nBigNumberが数より小さいかを判定します（<）。\n\n var bn = math.BigNumber(5)\n>@bn.Lt(3)@ @bn.Lt(10)@\n// false true" },
+            { key: ".Mul", insert: "Mul($1)", desc: " 戻り値:自身\nBigNumberに数を乗算します（*）。\n\n var myBigNum1 = math.BigNumber(12)\nmyBigNum1.Mul(5)\n>@myBigNum1@\n// 60" },
+            { key: ".parent", insert: "parent", desc: " 戻り値:Panel\nコンポーネントの親パネルへの参照を示します（読み取り専用）。panel.Add(component)が呼ばれると親が変更されます。\n\n var p\n?loc.begin\n  p = ui.AddPanel()\n  p.h = p.parent.h\n// 親パネルの高さに設定" },
+            { key: ".Pause", insert: "Pause()", desc: " 戻り値:なし\n現在のフレームでアニメーションの再生を一時停止します。anim.Play()で再開できます。\n\n anim.Pause()\n// アニメーションを一時停止" },
+            { key: ".paused", insert: "paused", desc: " 戻り値:bool\nアニメーションが再生中だがanim.Pause()で一時停止されているかどうかを示します（読み取り専用）。\n\n ?anim.paused\n  >Animation is paused\n// 一時停止中か確認" },
+            { key: ".pivotX", insert: "pivotX", desc: " 戻り値:int\nASCIIアートが位置に対してどこに描画されるかを微調整するための追加のピボットオフセットを示します。\n\n anim.pivotX = 2\n// Xピボットを2に調整" },
+            { key: ".pivotY", insert: "pivotY", desc: " 戻り値:int\nASCIIアートが位置に対してどこに描画されるかを微調整するための追加のピボットオフセットを示します。\n\n anim.pivotY = -1\n// Yピボットを-1に調整" },
+            { key: ".Play", insert: "Play()", desc: " 戻り値:なし\nアニメーションの再生を開始するか、一時停止していた再生を再開します。\n\n var dance\n?loc.begin\n  dance = ui.AddAnim(ascii\n(O/\n%%\n\\O)\nasciiend)\n  dance.duration = 20\n  dance.loop = true\n  dance.Play()\n// アニメーションを再生" },
+            { key: ".playing", insert: "playing", desc: " 戻り値:bool\nアニメーションが現在再生中かどうかを示します（読み取り専用）。\n\n ?anim.playing\n  >Animation is playing\n// 再生中か確認" },
+            { key: ".playOnStart", insert: "playOnStart", desc: " 戻り値:bool\n真の場合、アニメーションが可能な限り早く再生を開始します。\n\n anim.playOnStart = true\n// 即時再生を有効化" },
+            { key: ".Recycle", insert: "Recycle()", desc: " 戻り値:なし\nコンポーネントを親パネルから削除し、将来のui.Add_()呼び出しで再利用します。リサイクルされた要素への変数参照はnullにするか再割り当てが必要です。\n\n component.Recycle()\n// コンポーネントをリサイクル" },
+            { key: ".Remove", insert: "Remove($1)", desc: " 戻り値:なし\nパネルから特定のコンポーネントを削除します。削除されたコンポーネントはUIシステムでリサイクルされます。\n\n panel.Remove(t)\n// 特定のコンポーネントを削除" },
+            { key: ".Remove", insert: "Remove($1)", desc: " 戻り値:なし\nパネルの指定したインデックス番号のコンポーネントを削除します。削除されたコンポーネントはUIシステムでリサイクルされます。\n\n panel.Remove(0)\n// インデックス0のコンポーネントを削除" },
+            { key: ".RemoveAt", insert: "RemoveAt($1)", desc: " 戻り値:なし\n配列から指定した位置の要素を削除します。ゼロベースで、右側の要素は前の位置にシフトします。\n\n var myArray = [1, 2, 3]\nmyArray.RemoveAt(1)\n// 配列は [1, 3] になる" },
+            { key: ".Set", insert: "Set($1)", desc: " 戻り値:なし\nキャンバスの特定の位置(x, y)を指定した前景色(fg)、背景色(bg)、グリフに変更します。\n\n ?loc.begin\n  var canvas = ui.AddCanvas()\n  for x = 0..canvas.w\n    for y = 0..canvas.h\n      var fg = color.Random()\n      var bg = color.Random()\n      canvas.Set(x, y, fg, bg, '?')\n// キャンバス全体をランダムな色で埋める" },
+            { key: ".Set", insert: "Set($1)", desc: " 戻り値:なし\nキャンバスの特定の位置(x, y)を指定した前景色(fg)とグリフに変更します。\n\n ?loc.begin\n  var canvas = ui.AddCanvas()\n  canvas.Set(0, 0, '#ff0000', 'A')\n// (0,0)を赤い'A'に設定" },
+            { key: ".Set", insert: "Set($1)", desc: " 戻り値:なし\nキャンバスの特定の位置(x, y)を指定したグリフに変更します。\n\n ?loc.begin\n  var canvas = ui.AddCanvas()\n  canvas.Set(0, 0, 'A')\n// (0,0)を'A'に設定" },
+            { key: ".Set", insert: "Set($1)", desc: " 戻り値:なし\nキャンバス全体を指定したグリフで埋めます。\n\n ?loc.begin\n  var canvas = ui.AddCanvas()\n  canvas.Set('X')\n// キャンバスを'X'で埋める" },
+            { key: ".SetBG", insert: "SetBG($1)", desc: " 戻り値:なし\nキャンバス全体の背景色を設定します。\n\n ?loc.begin\n  var canvas = ui.AddCanvas()\n  canvas.Set('g')\n  canvas.SetBG('#00aa00')\n// キャンバス全体を緑の背景で'g'に設定" },
+            { key: ".SetBG", insert: "SetBG($1)", desc: " 戻り値:なし\nキャンバスの特定の位置(x, y)の背景色を変更します。\n\n ?loc.begin\n  var canvas = ui.AddCanvas()\n  canvas.Set('X')\n  canvas.SetBG(2, 1, '#yellow')\n// (2,1)の背景色を黄色に設定" },
+            { key: ".SetDown", insert: "SetDown($1)", desc: " 戻り値:なし\nボタンの押下が始まったとき（最初のユーザー接触）に呼び出される関数を割り当てます。\n\n func OnDown()\n  > Down!\n\n?loc.begin\n  var button = ui.AddButton()\n  button.y = 1\n  button.text = 'Press me'\n  button.SetDown(OnDown)\n// 押下開始時の関数を設定" },
+            { key: ".SetFG", insert: "SetFG($1)", desc: " 戻り値:なし\nキャンバス全体の前景色を設定します。\n\n ?loc.begin\n  var canvas = ui.AddCanvas()\n  canvas.Set('R')\n  canvas.SetFG('#red')\n// キャンバス全体を赤い'R'に設定" },
+            { key: ".SetFG", insert: "SetFG($1)", desc: " 戻り値:なし\nキャンバスの特定の位置(x, y)の前景色を変更します。\n\n ?loc.begin\n  var canvas = ui.AddCanvas()\n  canvas.Set('X')\n  canvas.SetFG(2, 1, '#ff00ff')\n// (2,1)の前景色をマゼンタに設定" },
+            { key: ".SetPressed", insert: "SetPressed($1)", desc: " 戻り値:なし\nボタンが押されたときに呼び出される関数を割り当てます。関数は任意の数のパラメータを持つことができ、最初の引数はボタン自体への参照になります。\n\n var button1\nvar button2\nfunc OnPressed(btn)\n  ?btn = button1\n    >Button1 was pressed\n  :\n    >Button2 was pressed\n\n?loc.begin\n  button1 = ui.AddButton()\n  button1.y = 1\n  button1.SetPressed(OnPressed)\n\n  button2 = ui.AddButton()\n  button2.y = 6\n  button2.SetPressed(OnPressed)\n// ボタン押下時の関数を設定" },
+            { key: ".SetUp", insert: "SetUp($1)", desc: " 戻り値:なし\nボタンの押下がボタン上で終了したとき（最後のユーザー接触）に呼び出される関数を割り当てます。\n\n func OnUp()\n  > Up!\n\n?loc.begin\n  var button = ui.AddButton()\n  button.y = 1\n  button.text = 'Press me'\n  button.SetUp(OnUp)\n// 押下終了時の関数を設定" },
+            { key: ".Sort", insert: "Sort()", desc: " 戻り値:なし\n配列の要素を昇順に整理します。異なる型のオブジェクトが含まれている場合でもソートされますが、期待される結果は保証されません。\n\n var myArray = ['Cherry', 2, 'Apple', 1, true, false, 'Banana', 3]\nmyArray.Sort()\nfor i = 0 .. myArray.Count() - 1\n  value = myArray[i]\n  >`0,@i@,@value@\n// 配列をソートして表示" },
+            { key: ".sound", insert: "sound", desc: " 戻り値:string\nボタンが押されたときに再生される効果音を示します。デフォルトは'confirm'。\n\n button.sound = 'buy'\n// ボタンの押下音を'buy'に変更" },
+            { key: ".Stop", insert: "Stop()", desc: " 戻り値:なし\n再生を停止し、アニメーションを最初のフレームに戻します。\n\n anim.Stop()\n// アニメーションを停止しリセット" },
+            { key: ".style", insert: "style", desc: " 戻り値:int\nパネルの現在のスタイルのID番号を示します。デフォルト値は1。可能な値は-8から8で、ui.AddStyle()で追加スタイルを定義できます。\n\n panel.style = 2\n// パネルのスタイルを2に設定" },
+            { key: ".style", insert: "style", desc: " 戻り値:int\nボタンの現在のスタイルのID番号を示します。デフォルト値は1。可能な値は-8から8で、ui.AddStyle()で追加可能です。\n\n button.style = 3\n// ボタンのスタイルを3に設定" },
+            { key: ".Sub", insert: "Sub($1)", desc: " 戻り値:自身\nBigNumberから数を減算します（-）。\n\n var bn = math.BigNumber(12)\nbn.Sub(5)\n>@bn@\n// 7" },
+            { key: ".tcolor", insert: "tcolor", desc: " 戻り値:string\nボタン内のテキストの色をRGB16進数形式で示します。\n\n button.tcolor = '#ff0000'\n// ボタンのテキスト色を赤に設定" },
+            { key: ".text", insert: "text", desc: " 戻り値:string\nボタン内に表示されるテキストを示します。\n\n button.text = player.name\n// ボタンにプレイヤーの名前を設定" },
+            { key: ".ToFloat", insert: "ToFloat()", desc: " 戻り値:float\nBigNumberを浮動小数点数に変換します。数が大きすぎるか小さすぎる場合はエラーをスローします。\n\n var bn = math.BigNumber(5)\nvar fNumber = bn.ToFloat()\n>float = @fNumber@\n// 5.0" },
+            { key: ".ToInt", insert: "ToInt()", desc: " 戻り値:int\nBigNumberを整数に変換します。数が大きすぎるか小さすぎる場合はエラーをスローします。\n\n var bn = math.BigNumber(5)\nvar iNumber = bn.ToInt()\n>integer = @iNumber@\n// 5" },
+            { key: ".ToString", insert: "ToString()", desc: " 戻り値:string\nBigNumberの文字列表現を返します。保存用にシリアル化できます。\n\n var myBigNum = math.BigNumber('123456789123456789')\nstorage.Set('myBN', myBigNum.ToString())\n// 文字列として保存" },
+            { key: ".ToUI", insert: "ToUI()", desc: " 戻り値:string\nユーザーインターフェース用の短縮された文字列表現を返します。\n\n var myBigNum = math.BigNumber('123456789123456789')\n>@myBigNum.ToUI()@\n// 123.5Qa" },
+            { key: ".visible", insert: "visible", desc: " 戻り値:bool/string\nコンポーネントの可視性を示します。デフォルト値は'inherit'。可能な値: true（常に表示）、false（常に非表示）、inherit（親の状態に従う）。\n\n component.visible = true\n// コンポーネントを常に表示" },
+            { key: ".w", insert: "w", desc: " 戻り値:integer\nコンポーネントの幅を示します。デフォルト値はオブジェクト型によって異なります。\n\n button.w = string.Size(button.text) + 4\n// ボタンの幅をテキストサイズ+4に設定" },
+            { key: ".x", insert: "x", desc: " 戻り値:integer\nコンポーネントのドック位置に対するX位置を示します。\n\n button.x = 5\n// ボタンのX位置を5に設定" },
+            { key: ".y", insert: "y", desc: " 戻り値:integer\nコンポーネントのドック位置に対するY位置を示します。\n\n button.y = 1\n// ボタンのY位置を1に設定" },
+            { key: "activate", insert: "activate", desc: " 戻り値:なし\nアイテムのアビリティを起動します。abilityは'potion', 'P', 'left', 'L', 'right', 'R'、またはアビリティIDを指定可能です。\n\n activate R\n// 右手に装備されたアイテムのアビリティを起動" },
+            { key: "ai.enabled", insert: "ai.enabled", desc: " 戻り値:bool\nAIがオンなら真、オフ（例: シネマティック中）なら偽を返します。\n\n ?ai.enabled\n  >AI is on\n// AIが有効ならメッセージ" },
+            { key: "ai.idle", insert: "ai.idle", desc: " 戻り値:bool\nプレイヤーがアイドル状態（攻撃完了待ちなど）なら真を返します。\n\n ?ai.idle\n  >Player is idle\n// アイドルならメッセージ" },
+            { key: "ai.paused", insert: "ai.paused", desc: " 戻り値:bool\nAIが一時停止中（例: 宝物待ち）なら真を返します。\n\n ?ai.paused\n  >AI paused\n// AIが一時停止ならメッセージ" },
+            { key: "ai.walking", insert: "ai.walking", desc: " 戻り値:bool\nプレイヤーが移動中なら真を返します。\n\n ?ai.walking\n  >Player is moving\n// 移動中ならメッセージ" },
+            { key: "ambient", insert: "ambient", desc: " 戻り値:string\n現在アクティブなすべてのアンビエント音声IDをカンマ区切りリストで返します。\n\n >`0,0,Ambient Layers = @ambient@\n// アンビエント音声リストを表示" },
+            { key: "ambient.Add", insert: "ambient.Add($1)", desc: " 戻り値:なし\n指定した音声IDでアンビエント音声のレイヤーを追加します。最大4レイヤー。5つ目のレイヤーを追加すると最古のレイヤーが削除されます。\n\n ?loc.begin\n  ambient.Add(ambient_crypt)\n// 開始時に'crypt'音声を追加" },
+            { key: "ambient.Stop", insert: "ambient.Stop()", desc: " 戻り値:なし\nすべてのアンビエント音声レイヤーをクリアします。\n\n ?time = 3\n  ambient.Stop()\n  ambient.Add(ambient_mines)\n// 3フレームで音声を切り替え" },
+            { key: "armor", insert: "armor", desc: " 戻り値:int\nプレイヤーの現在のアーマーを、小数点以下切り捨てで示します。\n\n ?armor < 3\n  equip shield\n// アーマーが3未満ならshieldを装備" },
+            { key: "armor.f", insert: "armor.f", desc: " 戻り値:int\nプレイヤーの現在のアーマーの小数部分を示します。\n\n ?armor.f = 4\n  >Armor fraction is 0.4\n// アーマーの小数が0.4ならメッセージ" },
+            { key: "bighead", insert: "bighead", desc: " 戻り値:bool\nプレイヤーがビッグヘッド（Moondial）を有効にしている場合に真を返します。\n\n ?bighead\n  >Big Head mode!\n// ビッグヘッドならメッセージ" },
+            { key: "brew", insert: "brew", desc: " 戻り値:なし\nポーション瓶を指定した材料の組み合わせで補充します。ラン開始時（time 0）でのみ実行されます。材料はstone, wood, tar, bronzeで、+で区切ります。材料名は英語または設定で選択した言語で記述可能です。\n\n ?loc.begin\n  brew bronze + tar\n// 開始時にbronzeとtarでポーションを調合" },
+            { key: "buffs.count", insert: "buffs.count", desc: " 戻り値:int\nプレイヤーにかかっているバフ（正の効果）の数を返します。\n\n ?buffs.count > 0\n  >`0,1,Player buffs = @buffs.string@\n// バフがあれば詳細を表示" },
+            { key: "buffs.GetCount", insert: "buffs.GetCount($1)", desc: " 戻り値:int\nプレイヤーに特定のバフがいくつあるかを返します。\n\n ?buffs.GetCount('speed') > 0\n  >Speed buff active!\n// 'speed'バフがあればメッセージ" },
+            { key: "buffs.GetTime", insert: "buffs.GetTime($1)", desc: " 戻り値:int\nプレイヤーに特定のバフの持続時間を返します。\n\n >`0,1,Speed time = @buffs.GetTime('speed')@\n// 'speed'バフの残り時間を表示" },
+            { key: "buffs.oldest", insert: "buffs.oldest", desc: " 戻り値:string\nプレイヤーにかかっている最も古いバフのIDを返します。\n\n >`0,1,Oldest buff: @buffs.oldest@\n// プレイヤーの最古バフを表示" },
+            { key: "buffs.string", insert: "buffs.string", desc: " 戻り値:string\nプレイヤーのすべてのバフに関する情報を合成した文字列を返します。\n\n ?buffs.count > 0\n  >`0,1,Player buffs = @buffs.string@\n// バフがあれば詳細を表示" },
+            { key: "color.FromRGB", insert: "color.FromRGB($1)", desc: " 戻り値:string\n3つの整数（0-255）から色を文字列に変換します。\n\n var c = color.FromRGB(255, 0, 128)\n>`0,0,@c@, @c@\n// RGBから色を生成" },
+            { key: "color.Lerp", insert: "color.Lerp($1)", desc: " 戻り値:string\n色c1からc2へ時間（パーセンテージ）tで線形補間します。\n\n var c1 = '#ff4400'\nvar c2 = '#8888ff'\nvar t = 0.5\nvar c\nt = math.sin(time*0.1) / 2 + 0.5\nc = color.Lerp(c1, c2, t)\n>`0,1,@c@,@c@\\n ??????\n// 色を補間" },
+            { key: "color.Random", insert: "color.Random()", desc: " 戻り値:string\nランダムな色を返します。\n\n var c\nc = color.Random()\n>`0,0,@c@,@c@\\n ??????\n// ランダムな色を表示" },
+            { key: "color.ToRGB", insert: "color.ToRGB($1)", desc: " 戻り値:int[3]\n文字列から3つの整数（0-255）に色を変換します。\n\n var c = color.Random()\nvar rgb = color.ToRGB(c)\nvar r = rgb[0]\nvar g = rgb[1]\nvar b = rgb[2]\n>`0,0,@c@, @c@ \\n @r@ \\n @g@ \\n @b@\n// 色をRGBに分解" },
+            { key: "debuffs.count", insert: "debuffs.count", desc: " 戻り値:int\nプレイヤーにかかっているデバフ（負の効果）の数を返します。\n\n ?debuffs.count > 0\n  >`0,2,Player debuffs = @debuffs.string@\n// デバフがあれば詳細を表示" },
+            { key: "debuffs.GetCount", insert: "debuffs.GetCount($1)", desc: " 戻り値:int\nプレイヤーに特定のデバフがいくつあるかを返します。\n\n ?debuffs.GetCount('poison') > 0\n  >Poisoned!\n// 'poison'デバフがあればメッセージ" },
+            { key: "debuffs.GetTime", insert: "debuffs.GetTime($1)", desc: " 戻り値:int\nプレイヤーに特定のデバフの持続時間を返します。\n\n >`0,1,Poison time = @debuffs.GetTime('poison')@\n// 'poison'デバフの残り時間を表示" },
+            { key: "debuffs.oldest", insert: "debuffs.oldest", desc: " 戻り値:string\nプレイヤーにかかっている最も古いデバフのIDを返します。\n\n >`0,1,Oldest debuff: @debuffs.oldest@\n// プレイヤーの最古デバフを表示" },
+            { key: "debuffs.string", insert: "debuffs.string", desc: " 戻り値:string\nプレイヤーのすべてのデバフに関する情報を合成した文字列を返します。\n\n ?debuffs.count > 0\n  >`0,2,Player debuffs = @debuffs.string@\n// デバフがあれば詳細を表示" },
+            { key: "disable abilities", insert: "disable abilities", desc: " 戻り値:なし\nポーションと武器のアビリティの起動を無効にします。HUDボタンもグレーアウトします。\n\n disable abilities\n// アビリティを無効化" },
+            { key: "disable banner", insert: "disable banner", desc: " 戻り値:なし\n場所の開始と終了時に表示される水平バナーのレンダリングを無効にします。\n\n disable banner\n// バナーを無効化" },
+            { key: "disable hud", insert: "disable hud", desc: " 戻り値:なし\nゲームプレイのユーザーインターフェース要素を非表示かつ無効にします。オプションで指定する要素: p=プレイヤーのHPとデバフ, f=敵のHPとデバフ, a=アビリティボタン, r=リソース, b=バナー, u=ユーティリティベルト。\n\n disable hud ru\n// リソース(r)とユーティリティベルト(u)を無効化" },
+            { key: "disable loadout input", insert: "disable loadout input", desc: " 戻り値:なし\n入力キーによる武器ロードアウトの保存や呼び出しを無効にします。\n\n disable loadout input\n// ロードアウト入力を無効化" },
+            { key: "disable loadout print", insert: "disable loadout print", desc: " 戻り値:なし\nロードアウトが呼び出されたときに表示されるメッセージを非表示にします。\n\n disable loadout print\n// ロードアウトメッセージを非表示" },
+            { key: "disable npcDialog", insert: "disable npcDialog", desc: " 戻り値:なし\nNPCの会話バブルを非表示にし、自動スキップします。\n\n disable npcDialog\n// NPC会話を無効化" },
+            { key: "disable pause", insert: "disable pause", desc: " 戻り値:なし\nポーズボタンのUIを非表示にします。[P]ショートカットではポーズ可能です。\n\n disable pause\n// ポーズボタンを非表示" },
+            { key: "disable player", insert: "disable player", desc: " 戻り値:なし\nプレイヤーを非表示にします。戦闘には影響せず、見た目のみの変更です。\n\n disable player\n// プレイヤーを非表示" },
+            { key: "draw.Bg", insert: "draw.Bg($1)", desc: " 戻り値:なし\n特定の画面位置の背景色を設定します。\n\n draw.Bg(5, 4, #red)\n// (5,4)に赤い背景を設定" },
+            { key: "draw.Bg", insert: "draw.Bg($1)", desc: " 戻り値:なし\n画面上の矩形領域の背景色を設定します。\n\n draw.Bg(5, 4, #cyan, 10, 6)\n// (5,4)から幅10、高さ6のシアンの背景を設定" },
+            { key: "draw.Box", insert: "draw.Box($1)", desc: " 戻り値:なし\n指定した位置とサイズで矩形を描画します。矩形の境界は色とスタイル番号で定義されます。負のスタイル番号は矩形の中央を透明にします。注意: 現在、高度なプリントは常にボックスの上に描画されます。\n\n var style = 1\n?key = leftBegin\n  style--\n?key = rightBegin\n  style++\ndraw.Box(10, 5, 30, 15, #333333, style)\n>`12,6,#ffffff,Style = @style@\n>`12,8,#888888,Press Left/Right\\nto change style\n// スタイルを変更可能なボックス" },
+            { key: "draw.Clear", insert: "draw.Clear()", desc: " 戻り値:なし\n画面全体をクリアします。\n\n draw.Clear()\n// 画面をクリア" },
+            { key: "draw.GetSymbol", insert: "draw.GetSymbol($1)", desc: " 戻り値:string\n画面位置(x, y)のグリフを返します。\n\n var s\nvar x = 20\nvar y = 10\nvar drawX\n?key=leftBegin\n  x--\n?key=rightBegin\n  x++\n?key=upBegin\n  y--\n?key=downBegin\n  y++\ns = draw.GetSymbol(x, y)\n>`0,1,Symbol = @s@\ndrawX = x - 1\n>`@drawX@,@y@,[#]\n// 選択した位置のシンボルを表示" },
+            { key: "draw.Player", insert: "draw.Player()", desc: " 戻り値:なし\nスクリプトの特定の地点で、装備やアドオンを含むプレイヤーキャラクターを描画します。\n\n draw.Player()\n// プレイヤーを描画" },
+            { key: "draw.Player", insert: "draw.Player($1)", desc: " 戻り値:なし\nスクリプトの特定の地点で、装備やアドオンを含むプレイヤーキャラクターを指定したオフセット(x, y)で描画します。絶対位置での描画はscreen名前空間を参照。\n\n draw.Player(5, 10)\n// (5,10)にプレイヤーを描画" },
+            { key: "enable abilities", insert: "enable abilities", desc: " 戻り値:なし\n以前に'disable abilities'で無効化されたアビリティの起動を復元します。\n\n enable abilities\n// アビリティを復元" },
+            { key: "enable banner", insert: "enable banner", desc: " 戻り値:なし\n水平バナーのレンダリングを復元します。\n\n enable banner\n// バナーを復元" },
+            { key: "enable hud", insert: "enable hud [{opts}]", desc: " 戻り値:なし\n'disable hud'で非表示にしたUI要素を復元します。オプションは'disable hud'と同じです。\n\n enable hud\n// すべてのHUDを復元" },
+            { key: "enable loadout input", insert: "enable loadout input", desc: " 戻り値:なし\n入力キーによる武器ロードアウトの保存や呼び出しを復元します。\n\n enable loadout input\n// ロードアウト入力を復元" },
+            { key: "enable loadout print", insert: "enable loadout print", desc: " 戻り値:なし\nロードアウトメッセージの表示を復元します。\n\n enable loadout print\n// ロードアウトメッセージを復元" },
+            { key: "enable npcDialog", insert: "enable npcDialog", desc: " 戻り値:なし\nNPCの会話バブルを復元します。\n\n enable npcDialog\n// NPC会話を復元" },
+            { key: "enable pause", insert: "enable pause", desc: " 戻り値:なし\n'disable pause'で非表示にしたポーズボタンを復元します。\n\n enable pause\n// ポーズボタンを復元" },
+            { key: "enable player", insert: "enable player", desc: " 戻り値:なし\n'disable player'で非表示にしたプレイヤーの表示を復元します。\n\n enable player\n// プレイヤーを復元" },
+            { key: "encounter.eliteMod", insert: "encounter.eliteMod", desc: " 戻り値:string\n現在のエンカウンターの特別な修飾子（存在する場合）を示します。\n\n >`0,2,Modifier = @encounter.eliteMod@\n// エリートの修飾子を表示" },
+            { key: "encounter.isElite", insert: "encounter.isElite", desc: " 戻り値:bool\n現在のエンカウンターがエリートエンカウンターかどうかを示します。\n\n >`0,1,Elite = @encounter.isElite@\n// エリートかどうかを表示" },
+            { key: "equip @{var}@", insert: "equip @{var}@", desc: " 戻り値:なし\n文字列変数から基準を取得してアイテムを装備します。減算基準もサポートします。\n\n var weaponName = 'poison sword *10 -big'\nequipR @weaponName@\n// 変数からpoison swordを右手で装備" },
+            { key: "equip ", insert: "equip {str}", desc: " 戻り値:なし\n指定した基準に基づいてアイテムを装備します。strは最大7つの基準を指定可能。両手持ちアイテムにはこの形式を使用する必要があります。\n\n equip vigor crossbow *8 +5\n// vigor crossbow（星8、強化+5）を装備" },
+            { key: "equipL ", insert: "equipL {str}", desc: " 戻り値:なし\n指定した基準に最も適合するアイテムを左手で装備します。\n\n equipL poison d_sword\n// poison d_swordを左手で装備" },
+            { key: "equipR ", insert: "equipR {str}", desc: " 戻り値:なし\n指定した基準に最も適合するアイテムを右手で装備します。\n\n equipR vigor shield\n// vigor shieldを右手で装備" },
+            { key: "event.GetObjectiveGoal", insert: "event.GetObjectiveGoal($1)", desc: " 戻り値:int\nコミュニティまたはシーズンイベントのアクティブな目標のゴールを返します。目標のインデックスを渡します（通常0, 1, 2）。\n\n var id\nvar p\nvar g\nid = event.GetObjectiveId(0)\np = event.GetObjectiveProgress(0)\ng = event.GetObjectiveGoal(0)\n>`0,1,@id@:@p@/@g@\n// 目標情報を表示" },
+            { key: "event.GetObjectiveId", insert: "event.GetObjectiveId($1)", desc: " 戻り値:string\nコミュニティまたはシーズンイベントのアクティブな目標のIDを返します。目標のインデックスを渡します（通常0, 1, 2）。\n\n var id\nid = event.GetObjectiveId(0)\n>`0,1,@id@:@p@/@g@\n// 目標IDを表示" },
+            { key: "event.GetObjectiveProgress", insert: "event.GetObjectiveProgress($1)", desc: " 戻り値:int\nコミュニティまたはシーズンイベントのアクティブな目標の進捗を返します。目標のインデックスを渡します（通常0, 1, 2）。\n\n var p\np = event.GetObjectiveProgress(0)\n>`0,1,@id@:@p@/@g@\n// 目標進捗を表示" },
+            { key: "face", insert: "face", desc: " 戻り値:string\nプレイヤーの現在の表情を示します。\n\n ?face = '^^'\n  >Happy\n// 表情が'^^'なら'Happy'を表示" },
+            { key: "foe", insert: "foe", desc: " 戻り値:string\nプレイヤーが現在ターゲットにしている敵を示します。\n\n ?foe = boo\n  equip vigor staff\n// foeが'boo'ならvigor staffを装備" },
+            { key: "foe.armor", insert: "foe.armor", desc: " 戻り値:int\nプレイヤーがターゲットにしている敵の現在のアーマーを示します。\n\n ?foe.armor > 5\n  equip hammer\n// 敵のアーマーが5を超えるならhammerを装備" },
+            { key: "foe.buffs.count", insert: "foe.buffs.count", desc: " 戻り値:int\nターゲットにしている敵にかかっているバフ（正の効果）の数を返します。\n\n ?foe.buffs.count > 0\n  >`0,3,Foe buffs = @foe.buffs.string@\n// 敵にバフがあれば詳細を表示" },
+            { key: "foe.buffs.GetCount", insert: "foe.buffs.GetCount($1)", desc: " 戻り値:int\nターゲットにしている敵に特定のバフがいくつあるかを返します。\n\n ?foe.buffs.GetCount('strength') > 0\n  >Strength buff detected!\n// 敵に'strength'バフがあればメッセージ" },
+            { key: "foe.buffs.GetTime", insert: "foe.buffs.GetTime($1)", desc: " 戻り値:int\nターゲットにしている敵に特定のバフの持続時間を返します。\n\n >`0,2,Strength time = @foe.buffs.GetTime('strength')@\n// 'strength'バフの残り時間を表示" },
+            { key: "foe.buffs.string", insert: "foe.buffs.string", desc: " 戻り値:string\nターゲットにしている敵のすべてのバフに関する情報を合成した文字列を返します。\n\n ?foe.buffs.count > 0\n  >`0,3,Foe buffs = @foe.buffs.string@\n// 敵にバフがあれば詳細を表示" },
+            { key: "foe.count", insert: "foe.count", desc: " 戻り値:int\nプレイヤーから46ユニット以内にいる敵の数を示します。\n\n ?foe.count > 3\n  equip shield\n// 敵が3体以上ならshieldを装備" },
+            { key: "foe.damage", insert: "foe.damage", desc: " 戻り値:int\nプレイヤーがターゲットにしている敵の1回ごとの攻撃ダメージを示します。\n\n >`0,1,foe damage = @foe.damage@\n// 敵のダメージを表示" },
+            { key: "foe.debuffs.count", insert: "foe.debuffs.count", desc: " 戻り値:int\nターゲットにしている敵にかかっているデバフ（負の効果）の数を返します。\n\n ?foe.debuffs.count > 0\n  >`0,4,Foe debuffs = @foe.debuffs.string@\n// 敵にデバフがあれば詳細を表示" },
+            { key: "foe.debuffs.GetCount", insert: "foe.debuffs.GetCount($1)", desc: " 戻り値:int\nターゲットにしている敵に特定のデバフがいくつあるかを返します。\n\n >`0,1,Chill debuff count =\n^ @foe.debuffs.GetCount('debuff_chill')@\n// 'debuff_chill'の数を表示" },
+            { key: "foe.debuffs.GetTime", insert: "foe.debuffs.GetTime($1)", desc: " 戻り値:int\nターゲットにしている敵に特定のデバフの持続時間を返します。\n\n >`0,2,Chill debuff time =\n^ @foe.debuffs.GetTime('debuff_chill')@\n// 'debuff_chill'の残り時間を表示" },
+            { key: "foe.debuffs.string", insert: "foe.debuffs.string", desc: " 戻り値:string\nターゲットにしている敵のすべてのデバフに関する情報を合成した文字列を返します。\n\n ?foe.debuffs.count > 0\n  >`0,4,Foe debuffs = @foe.debuffs.string@\n// 敵にデバフがあれば詳細を表示" },
+            { key: "foe.distance", insert: "foe.distance", desc: " 戻り値:int\nプレイヤーとターゲットにしている敵との距離を示します。\n\n ?foe.distance < 5\n  equip sword\n// 敵が5未満の距離ならswordを装備" },
+            { key: "foe.GetCount", insert: "foe.GetCount($1)", desc: " 戻り値:int\n指定したユニット数以内にいる敵の数を示します。\n\n ?foe.GetCount(10) > 2\n  >Crowded!\n// 10ユニット以内に敵が2体以上ならメッセージ" },
+            { key: "foe.hp", insert: "foe.hp", desc: " 戻り値:int\nプレイヤーがターゲットにしている敵の現在のヒットポイントを示します。\n\n ?foe.hp < 10\n  >Foe is weak!\n// 敵のHPが10未満ならメッセージ" },
+            { key: "foe.id", insert: "foe.id", desc: " 戻り値:string\nプレイヤーがターゲットにしている敵のユニークなID（またはタイプ）を示します。\n\n ?foe.id = 'skeleton'\n  equip sword\n// foeのIDが'skeleton'ならswordを装備" },
+            { key: "foe.level", insert: "foe.level", desc: " 戻り値:int\nターゲットにしている敵のレベル番号を返します。\n\n >`0,0,Foe = @foe.name@ is level @foe.level@\n// 敵のレベルを表示" },
+            { key: "foe.maxarmor", insert: "foe.maxarmor", desc: " 戻り値:int\nプレイヤーがターゲットにしている敵の最大アーマーを示します。\n\n >`0,1,Foe Armor = @foe.armor@/@foe.maxarmor@\n// 敵のアーマーと最大アーマーを表示" },
+            { key: "foe.maxhp", insert: "foe.maxhp", desc: " 戻り値:int\nプレイヤーがターゲットにしている敵の最大ヒットポイントを示します。\n\n >`0,1,Foe HP = @foe.hp@/@foe.maxhp@\n// 敵のHPと最大HPを表示" },
+            { key: "foe.name", insert: "foe.name", desc: " 戻り値:string\nプレイヤーがターゲットにしている敵のローカライズされた名前を示します。\n\n >`0,1,Foe = @foe.name@\n// 敵の名前を表示" },
+            { key: "foe.state", insert: "foe.state", desc: " 戻り値:int\nターゲットにしている敵の現在の状態を表す数値を返します。\n\n ?foe.state = 0\n  >`0,0,Foe is asleep\n// 敵が眠っている場合にメッセージ" },
+            { key: "foe.time", insert: "foe.time", desc: " 戻り値:int\nターゲットにしている敵が現在の状態になってからの経過フレーム数を返します。\n\n >`0,0,Foe = @foe.name@:@foe.state@,@foe.time@\n// 敵の状態と経過時間を表示" },
+            { key: "foe.z", insert: "foe.z", desc: " 戻り値:int\nターゲットにしている敵のZ位置を示します。\n\n ?foe.z > 0\n  >Foe is above!\n// 敵が上方にいる場合にメッセージ" },
+            { key: "for", insert: "for", desc: " 戻り値:なし\n変数'v'を値'a'から'b'まで反復するループを作成します。ループ内のコードは複数回実行されます。\n\n var a\na = 0\nfor i = 1..5\n  a = a + i\n>a = @a@\n// 1から5までの合計を表示" },
+            { key: "func", insert: "func", desc: " 戻り値:なし\n後で呼び出せる関数を宣言します。\n\n func Print(message)\n  >@message@\n\nPrint(Hello World!)\n// 'Hello World!' を表示する関数" },
+            { key: "harvest", insert: "harvest", desc: " 戻り値:string\n次に採取可能なオブジェクト（木や岩など）を示します。\n\n ?harvest=Boulder\n  equip shovel\n// 採取対象が'Boulder'ならshovelを装備" },
+            { key: "harvest.distance", insert: "harvest.distance", desc: " 戻り値:int\nプレイヤーと最も近い採取可能オブジェクトとの距離を示します。\n\n ?loc=Rocky & harvest.distance < 7\n  equip shovel\n// Rockyで採取対象が7未満ならshovelを装備" },
+            { key: "harvest.z", insert: "harvest.z", desc: " 戻り値:int\n最も近い採取可能オブジェクトのZ位置を示します。\n\n ?loc=Rocky & harvest.z > 5\n  equip shovel\n// RockyでZ位置が5超ならshovelを装備" },
+            { key: "hp", insert: "hp", desc: " 戻り値:int\nプレイヤーの現在のヒットポイントを示します。\n\n ?hp < 5\n  activate potion\n// HPが5未満ならポーション使用" },
+            { key: "import", insert: "import", desc: " 戻り値:なし\n外部スクリプトの単一コピーをロードして実行します。\n\n import Fishing\n// Fishingミニゲームをインポート" },
+            { key: "input.x", insert: "input.x", desc: " 戻り値:int\n入力デバイス（マウス/タッチ）のASCIIグリッド上のX位置を示します。\n\n > (@input.x@, @input.y@)\n// 入力位置を表示" },
+            { key: "input.y", insert: "input.y", desc: " 戻り値:int\n入力デバイス（マウス/タッチ）のASCIIグリッド上のY位置を示します。\n\n > (@input.x@, @input.y@)\n// 入力位置を表示" },
+            { key: "int.Parse", insert: "int.Parse($1)", desc: " 戻り値:integer\n数値の文字列を整数値に変換します。数値でない文字列の場合はエラーをスローします。\n\n var s = '999'\nvar i = int.Parse(s)\ni++\n// 999を整数に変換し、1増加" },
+            { key: "item.CanActivate", insert: "item.CanActivate()", desc: " 戻り値:boolean\nアイテムのアビリティを起動できる場合は真、そうでない場合は偽を返します。ボス戦前やシネマティック中など、一部の状況ではクールダウンがなくても起動が無効になります。\n\n ?item.CanActivate()\n  equip Bardiche\n  activate R\n// アビリティ起動が可能ならBardicheを装備して使用" },
+            { key: "item.CanActivate", insert: "item.CanActivate($1)", desc: " 戻り値:boolean\n特定のアイテムを起動できる場合は真を返します。アイテムが装備されている場合にのみ真になります。特定の基準を満たさないと起動できないアイテムもあります。item.GetCooldown()のサブセットです。\n\n equip bardiche\n?item.GetCooldown('skeleton_arm') <= 0\n  equip skeleton arm\n  ?item.CanActivate('skeleton_arm')\n    activate R\n// skeleton_armが起動可能なら使用" },
+            { key: "item.GetCooldown", insert: "item.GetCooldown($1)", desc: " 戻り値:integer\n指定したアビリティの残りクールダウン時間（フレーム単位）を返します。無効なアビリティ文字列は-1を返します。未使用の武器アビリティも-1を返す場合があります。\n\n ?foe = boss & item.GetCooldown('bardiche') <= 0\n  equip bardiche\n  activate R\n// ボス戦でbardicheが使用可能なら装備して起動" },
+            { key: "item.GetCount", insert: "item.GetCount($1)", desc: " 戻り値:integer\nインベントリ内のアイテムのコピー数を返します。アイテムが見つからない場合は0を返します。\n\n var searchCriteria = 'sword *0 -big -socket'\nvar swordCount = item.GetCount(searchCriteria)\n>I have @swordCount@ basic swords\n// 基本的な剣の数を表示" },
+            { key: "item.GetLoadoutL", insert: "item.GetLoadoutL($1)", desc: " 戻り値:string\n特定のロードアウトの左手のアイテムを返します。整数パラメータはクエリするロードアウト番号です。スロットにアイテムがない場合は空文字列を返します。\n\n >`0,1,Left: @item.GetLoadoutL(1)@\n// ロードアウト1の左手アイテムを表示" },
+            { key: "item.GetLoadoutR", insert: "item.GetLoadoutR($1)", desc: " 戻り値:string\n特定のロードアウトの右手のアイテムを返します。整数パラメータはクエリするロードアウト番号です。スロットにアイテムがない場合は空文字列を返します。\n\n >`0,2,Right: @item.GetLoadoutR(1)@\n// ロードアウト1の右手アイテムを表示" },
+            { key: "item.GetTreasureCount", insert: "item.GetTreasureCount()", desc: " 戻り値:integer\nインベントリ内の宝箱の現在の数を返します。\n\n var trs\ntrs = item.GetTreasureCount()\n>`0,2,Treasures: @trs@/@max@\n// 宝箱の数を表示" },
+            { key: "item.GetTreasureLimit", insert: "item.GetTreasureLimit()", desc: " 戻り値:integer\nインベントリ内の宝箱の総容量（最大容量）を返します。\n\n var trs\nvar max\ntrs = item.GetTreasureCount()\nmax = item.GetTreasureLimit()\n>`0,2,Treasures: @trs@/@max@\n// 宝箱の数と容量を表示" },
+            { key: "item.left", insert: "item.left", desc: " 戻り値:string\n左手に装備されているアイテムを示します。\n\n >`0,1,Left:@item.left@\n>`0,2,Right:@item.right@\n// 左右の装備を表示" },
+            { key: "item.left.gp", insert: "item.left.gp", desc: " 戻り値:int\n左手に装備されているアイテムのギアパワーの値を返します。\n\n >`0,1,Left GP:@item.left.gp@\n// 左手のギアパワーを表示" },
+            { key: "item.left.id", insert: "item.left.id", desc: " 戻り値:string\n左手に装備されているアイテムのIDを返します。\n\n >`0,1,Left ID:@item.left.id@\n// 左手のアイテムIDを表示" },
+            { key: "item.left.state", insert: "item.left.state", desc: " 戻り値:int\n左手に装備されている武器の現在の状態を数値で示します。\n\n >`0,1,@item.left.state@:@item.left.time@\n// 左手の状態と時間を表示" },
+            { key: "item.left.time", insert: "item.left.time", desc: " 戻り値:int\n左手に装備されている武器の現在の状態での経過フレーム数を返します。\n\n >`0,1,@item.left.state@:@item.left.time@\n// 左手の状態と時間を表示" },
+            { key: "item.potion", insert: "item.potion", desc: " 戻り値:string\n現在調合されているポーションを示します。自動補充が有効な場合'auto'を含みます。\n\n ?item.potion ! empty & item.potion = auto\n  activate potion\n// ポーションが空でなく自動補充なら起動" },
+            { key: "item.right", insert: "item.right", desc: " 戻り値:string\n右手に装備されているアイテムを示します。\n\n ?item.right = quarterstaff\n  activate R\n// 右手にquarterstaffならアビリティ起動" },
+            { key: "item.right.gp", insert: "item.right.gp", desc: " 戻り値:int\n右手に装備されているアイテムのギアパワーの値を返します。\n\n >`0,2,Right GP:@item.right.gp@\n// 右手のギアパワーを表示" },
+            { key: "item.right.id", insert: "item.right.id", desc: " 戻り値:string\n右手に装備されているアイテムのIDを返します。\n\n >`0,2,Right ID:@item.right.id@\n// 右手のアイテムIDを表示" },
+            { key: "item.right.state", insert: "item.right.state", desc: " 戻り値:int\n右手に装備されている武器の現在の状態を数値で示します。\n\n >`0,2,@item.right.state@:@item.right.time@\n// 右手の状態と時間を表示" },
+            { key: "item.right.time", insert: "item.right.time", desc: " 戻り値:int\n右手に装備されている武器の現在の状態での経過フレーム数を返します。\n\n >`0,2,@item.right.state@:@item.right.time@\n// 右手の状態と時間を表示" },
+            { key: "key", insert: "key", desc: " 戻り値:string\nカスタムゲーム入力の状態を示します。\n\n >@key@\n// 現在の入力を表示" },
+            { key: "key.Bind", insert: "key.Bind($1)", desc: " 戻り値:なし\n特定のアクションに新しいキーを割り当てます。他のアクションがそのキーを使っている場合、元のアクションからキーが放棄されます。\n\n ?loc.begin\n  key.Bind('Potion', 'P')\n// 'P'キーをポーションに割り当て" },
+            { key: "key.Bind", insert: "key.Bind($1)", desc: " 戻り値:なし\n特定のアクションに2つの新しいキーを割り当てます。他のアクションがそのキーを使っている場合、元のアクションからキーが放棄されます。\n\n ?loc.begin\n  key.Bind('Potion', 'P', 'Q')\n// 'P'と'Q'をポーションに割り当て" },
+            { key: "key.GetActKey", insert: "key.GetActKey($1)", desc: " 戻り値:string\n指定したアクションに割り当てられた最初のキーを返します。キーが割り当てられていない場合は'None'を返します。\n\n key.GetActKey('Potion')\n// 'Potion'の最初のキーを取得" },
+            { key: "key.GetActKey2", insert: "key.GetActKey2($1)", desc: " 戻り値:string\n指定したアクションに割り当てられた2番目のキーを返します。2番目のキーが割り当てられていない場合は'None'を返します。\n\n key.GetActKey2('Potion')\n// 'Potion'の2番目のキーを取得" },
+            { key: "key.GetActLabel", insert: "key.GetActLabel($1)", desc: " 戻り値:string\n指定したアクションに割り当てられた最初のキーを表すユーザー向けラベルを返します。現在の実装ではキーの最初の文字を返します。\n\n key.GetActLabel('Potion')\n// 'Potion'のラベルを取得" },
+            { key: "key.GetKeyAct", insert: "key.GetKeyAct($1)", desc: " 戻り値:string\n指定したキーに割り当てられたアクションを返します。キーが何にも割り当てられていない場合は'None'を返します。\n\n key.GetKeyAct('P')\n// 'P'キーのアクションを取得" },
+            { key: "key.ResetBinds", insert: "key.ResetBinds()", desc: " 戻り値:なし\nすべてのアクションをデフォルトのキー割り当てにリセットします。\n\n key.ResetBinds()\n// キー割り当てをリセット" },
+            { key: "loadout ", insert: "loadout", desc: " 戻り値:なし\n指定した番号のロードアウトを装備します。\n\n ?loc = caves\n  loadout 1\n?loc = deadwood\n  loadout 2\n// 場所に応じたロードアウトを装備" },
+            { key: "loc", insert: "loc", desc: " 戻り値:string\nプレイヤーが現在訪れている場所を示します。\n\n ?loc = caves\n  loadout 1\n// locが'caves'ならloadout 1を装備" },
+            { key: "loc.averageTime", insert: "loc.averageTime", desc: " 戻り値:int\n現在の場所の平均クリア時間を示します。最新のクリア時間が最も重み付けされ、古い時間ほど影響が少なくなります。\n\n >`0,2,Average time =\n^ @loc.averageTime@ frames\n// 平均クリア時間を表示" },
+            { key: "loc.begin", insert: "loc.begin", desc: " 戻り値:bool\n場所の最初のフレーム（time = 0）でのみ真となり、ゲームシミュレーションが実行される前です。Ouroborosループ後では真になりません。変数のリセットに役立ちます。\n\n var i\n?loc.begin\n  i = 0\n  ?loc = caves\n    i = -100\n// 場所開始時にiをリセット" },
+            { key: "loc.bestTime", insert: "loc.bestTime", desc: " 戻り値:int\n現在の場所の最短クリア時間（ハイスコア）を示します。\n\n >`0,1,Best time =\n^ @loc.bestTime@ frames\n// 最短クリア時間を表示" },
+            { key: "loc.gp", insert: "loc.gp", desc: " 戻り値:int\n現在のランで使用されている総ギアパワーを示します。\n\n >`0,1,Run GP = @loc.gp@\n// 現在の総ギアパワーを表示" },
+            { key: "loc.id", insert: "loc.id", desc: " 戻り値:string\n現在の場所のユニークな識別子を示します。\n\n var id\nid = loc.id\n>Exploring @id@\n// 現在の場所IDを表示" },
+            { key: "loc.isQuest", insert: "loc.isQuest", desc: " 戻り値:bool\n現在の場所がレジェンドやカスタムクエストの特別な場所であれば真、それ以外は偽となります。\n\n ?loc.isQuest\n  >`0,1,We're in a special quest location\n// クエスト場所ならメッセージ表示" },
+            { key: "loc.Leave", insert: "loc.Leave()", desc: " 戻り値:なし\nプレイヤーが手動で退出したかのようにランを放棄します。\n\n loc.Leave()\n// ランを放棄" },
+            { key: "loc.loop", insert: "loc.loop", desc: " 戻り値:bool\nOuroborosループ後のランの最初のフレームで真となります。\n\n var loopCount = 0\n?loc.loop\n  loopCount++\n// ループごとにカウントを増加" },
+            { key: "loc.name", insert: "loc.name", desc: " 戻り値:string\n現在の場所のローカライズされた名前を示します。\n\n >Exploring @loc.name@\n// 現在の場所名を表示" },
+            { key: "loc.Pause", insert: "loc.Pause()", desc: " 戻り値:なし\nプレイヤーがポーズボタンを押したかのようにランを一時停止します。\n\n loc.Pause()\n// ランを一時停止" },
+            { key: "loc.stars", insert: "loc.stars", desc: " 戻り値:int\n現在の場所の難易度を示します。\n\n ?loc = caves\n  ?loc.stars=4\n    loadout 1\n  ?loc.stars=5\n    loadout 2\n// cavesの難易度に応じて装備を変更" },
+            { key: "math.Abs", insert: "math.Abs($1)", desc: " 戻り値:number\n指定した数の絶対値を返します。\n\n var number = -2\nnumber = math.Abs(number)\n// numberは2になる" },
+            { key: "math.Acos", insert: "math.Acos($1)", desc: " 戻り値:number\n数のアークコサインをラジアンで返します。入力範囲は-1から1で、範囲外の場合は'NaN'を返します。\n\n var number = math.Acos(-1)\n// numberはπになる" },
+            { key: "math.Asin", insert: "math.Asin($1)", desc: " 戻り値:number\n数のアークサインをラジアンで返します。入力範囲は-1から1で、範囲外の場合は'NaN'を返します。\n\n var number = math.Asin(1)\n// numberはπ/2になる" },
+            { key: "math.Atan", insert: "math.Atan($1)", desc: " 戻り値:number\n数のアークタンジェントをラジアンで返します。\n\n var number = math.Atan(2)\n// numberは1.107149になる" },
+            { key: "math.Atan2", insert: "math.Atan2($1)", desc: " 戻り値:number\nx軸と原点から点(x,y)への線との角度をラジアンで返します。\n\n var number = math.Atan2(3, 2)\n// numberは0.9827937になる" },
+            { key: "math.BigNumber", insert: "math.BigNumber()", desc: " 戻り値:BigNumber\n新しいBigNumberオブジェクトをデフォルトで作成します。\n\n var myBigNum = math.BigNumber()\n>@myBigNum@\n// デフォルトのBigNumberを作成" },
+            { key: "math.BigNumber", insert: "math.BigNumber($1)", desc: " 戻り値:BigNumber\n浮動小数点数または整数から新しいBigNumberオブジェクトを作成します。\n\n var myBigNum = math.BigNumber(500)\nmyBigNum.Add(500)\n>@myBigNum@\n// 500からBigNumberを作成し加算" },
+            { key: "math.BigNumber", insert: "math.BigNumber($1)", desc: " 戻り値:BigNumber\n文字列を解析して新しいBigNumberオブジェクトを作成します。\n\n var myBigNum = math.BigNumber('500')\nmyBigNum.Add(500).Mul(1000).Mul(1000).Mul(1000)\n>@myBigNum@\n// '500'からBigNumberを作成し計算\n// 1000000000000" },
+            { key: "math.Ceil", insert: "math.Ceil($1)", desc: " 戻り値:number\n数を切り上げて、それより大きい最初の整数を返します。\n\n var number = math.Ceil(4.2)\n// numberは5.0になる" },
+            { key: "math.CeilToInt", insert: "math.CeilToInt($1)", desc: " 戻り値:integer\n数を切り上げて、それより大きい最初の整数を返します。\n\n var number = math.CeilToInt(4.2)\n// numberは5になる" },
+            { key: "math.Clamp", insert: "math.Clamp($1)", desc: " 戻り値:number\n数を'min'と'max'の範囲内に制限します。既に範囲内にある場合は変更せず返します。\n\n var number = 50\nnumber = math.Clamp(number, 0, 10)\n// numberは10になる" },
+            { key: "math.Cos", insert: "math.Cos($1)", desc: " 戻り値:number\n指定したラジアン角度のコサインを返します。\n\n var number = math.Cos(0)\n// numberは1になる" },
+            { key: "math.e", insert: "math.e", desc: " 戻り値:float\nオイラー数とも呼ばれる定数e（約2.71828）を返します。\n\n >E = @math.e@\n// eの値を画面に表示" },
+            { key: "math.Exp", insert: "math.Exp($1)", desc: " 戻り値:number\neを指定したべき乗に上げた値を返します。\n\n var number = math.Exp(3)\n// numberは20.08554になる" },
+            { key: "math.Floor", insert: "math.Floor($1)", desc: " 戻り値:number\n数を切り捨てて、それより小さい最初の整数を返します。\n\n var number = math.Floor(2.7)\n// numberは2.0になる" },
+            { key: "math.FloorToInt", insert: "math.FloorToInt($1)", desc: " 戻り値:integer\n数を切り捨てて、それより小さい最初の整数を返します。\n\n var number = math.FloorToInt(2.7)\n// numberは2になる" },
+            { key: "math.Lerp", insert: "math.Lerp($1)", desc: " 戻り値:number\n値aからbへ時間（パーセンテージ）tで線形補間を行います。\n\n var number = math.Lerp(0.0, 20.0, 0.75)\n// numberは15.0になる" },
+            { key: "math.Log", insert: "math.Log($1)", desc: " 戻り値:number\n指定した底での数の対数を返します。\n\n var number = math.Log(5, 2)\n// numberは2.321928になる" },
+            { key: "math.Max", insert: "math.Max($1)", desc: " 戻り値:number\n2つの数のうち大きい方を返します。\n\n var number = math.Max(3, 10)\n// numberは10になる" },
+            { key: "math.Min", insert: "math.Min($1)", desc: " 戻り値:number\n2つの数のうち小さい方を返します。\n\n var number = math.Min(3, 10)\n// numberは3になる" },
+            { key: "math.pi", insert: "math.pi", desc: " 戻り値:float\n円周率π（約3.1415926）を返します。\n\n >PI = @math.pi@\n// πの値を画面に表示" },
+            { key: "math.Pow({p})", insert: "math.Pow($1)", desc: " 戻り値:number\n数を指定したべき乗に上げた値を返します。\n\n var number = math.Pow(3, 2)\n// numberは9になる" },
+            { key: "math.Round", insert: "math.Round($1)", desc: " 戻り値:number\n数を最も近い整数に丸めます。\n\n var number = math.Round(2.7)\n// numberは3.0になる" },
+            { key: "math.RoundToInt", insert: "math.RoundToInt($1)", desc: " 戻り値:integer\n数を最も近い整数に丸めます。\n\n var number = math.RoundToInt(2.7)\n// numberは3になる" },
+            { key: "math.Sign", insert: "math.Sign($1)", desc: " 戻り値:number\n指定した数が負の場合は-1、それ以外の場合は1を返します。\n\n var sign = math.Sign(-21)\nvar n = 10 * sign\n// nは-10になる" },
+            { key: "math.Sin", insert: "math.Sin($1)", desc: " 戻り値:number\n指定したラジアン角度のサインを返します。\n\n var number = math.Sin(math.pi / 2)\n// numberは1になる" },
+            { key: "math.Sqrt", insert: "math.Sqrt($1)", desc: " 戻り値:number\n数の平方根を返します。\n\n var number = math.Sqrt(9)\n// numberは3になる" },
+            { key: "math.Tan", insert: "math.Tan($1)", desc: " 戻り値:number\n指定したラジアン角度のタンジェントを返します。\n\n var number = math.Tan(2)\n// numberは-2.18504になる" },
+            { key: "math.ToDeg", insert: "math.ToDeg($1)", desc: " 戻り値:number\nラジアンの数を度に変換します。\n\n var number = math.ToDeg(2 * math.pi)\n// numberは360になる" },
+            { key: "math.ToRad", insert: "math.ToRad($1)", desc: " 戻り値:number\n度の数をラジアンに変換します。\n\n var number = math.ToRad(360)\n// numberは2πになる" },
+            { key: "maxarmor", insert: "maxarmor", desc: " 戻り値:int\nプレイヤーの最大アーマーを、小数点以下切り捨てで示します。\n\n >`0,1,Armor = @armor@/@maxarmor@\n// アーマーと最大アーマーを表示" },
+            { key: "maxhp", insert: "maxhp", desc: " 戻り値:int\nプレイヤーの最大ヒットポイントを示します。\n\n >`0,1,HP = @hp@/@maxhp@\n// HPと最大HPを表示" },
+            { key: "music", insert: "music", desc: " 戻り値:string\n現在再生中の音楽のIDを返します。\n\n >`0,0,Current Music = @music@\n// 現在の音楽IDを表示" },
+            { key: "music.Play", insert: "music.Play($1)", desc: " 戻り値:なし\n指定した音声IDで音楽を再生します。同時に再生できる音楽は1つだけです。\n\n ?loc.begin | loc.loop\n  music.Play(temple_0)\n// 開始またはループ時にtemple_0を再生" },
+            { key: "music.Stop", insert: "music.Stop()", desc: " 戻り値:なし\nすべての音楽を停止します。\n\n ?!string.Equals(music, '')\n  music.Stop()\n// 音楽が再生中なら停止" },
+            { key: "new {script}", insert: "new {script}", desc: " 戻り値:any\n'import'と同様に外部スクリプトをロードして実行しますが、'new'でロードされたオブジェクトはそれぞれ独立したコピーであり、スクリプト本体は1回のみ実行されます。\n\n var v = new Components/Vector\nv.Init(10, 5)\n>Vector = @v@\n// ベクターオブジェクトを作成して表示" },
+            { key: "pickup", insert: "pickup", desc: " 戻り値:string\nプレイヤーが現在ターゲットにしているピックアップを示します。\n\n ?pickup\n  equip star stone\n:\n  loadout 1\n// ピックアップがあればstar stoneを装備" },
+            { key: "pickup.distance", insert: "pickup.distance", desc: " 戻り値:int\nプレイヤーとターゲットにしているピックアップとの距離を示します。\n\n ?pickup.distance < 5\n  equipL star stone\n// ピックアップが5未満なら左手で装備" },
+            { key: "pickup.z", insert: "pickup.z", desc: " 戻り値:int\nターゲットにしているピックアップのZ位置を示します。\n\n ?pickup.z > 7\n  equipL star stone\n// ピックアップのZが7超なら左手で装備" },
+            { key: "play", insert: "play {sound} [{pitch}]", desc: " 戻り値:なし\n効果音を再生します。ピッチはオプションで、デフォルトは100。高い値で高音、低い値で低音になります。\n\n ?key = primary\n  play buy\n// 'primary'キーで'buy'音を再生" },
+            { key: "player.direction", insert: "player.direction", desc: " 戻り値:int\nプレイヤーが向いている方向を示します。右なら1、左なら-1を返します。\n\n ?player.direction = 1\n  >`0,0,Walking right\n:\n  >`0,0,Walking left\n// 方向に応じたメッセージ" },
+            { key: "player.framesPerMove", insert: "player.framesPerMove", desc: " 戻り値:int\nプレイヤーが1ポジション進むのにかかるフレーム数を示します。\n\n >`0,1,Player Movement: @player.framesPerMove@\n// 移動ごとのフレーム数を表示" },
+            { key: "player.GetNextLegendName", insert: "player.GetNextLegendName()", desc: " 戻り値:string\nプレイヤーがまだクリアしていない次にアンロックされるレジェンドクエストの名前を返します。\n\n >`0,1,Next Legend: @player.GetNextLegendName()@\n// 次のレジェンドクエスト名を表示" },
+            { key: "player.name", insert: "player.name", desc: " 戻り値:string\nプレイヤーが選んだ名前を示します。\n\n var name\nvar x\nname = player.name\nx = string.Size(name) / -2\n>o@x@,-2,@name@\n// プレイヤーの頭上に名前を表示" },
+            { key: "player.ShowScaredFace", insert: "player.ShowScaredFace($1)", desc: " 戻り値:なし\nビッグヘッドが有効な場合、指定した時間だけプレイヤーの表情を怖がった顔に変更します。\n\n ?key = primaryBegin\n  player.ShowScaredFace(1)\n// 'primary'キーで1フレーム怖がる" },
+            { key: "pos.x", insert: "pos.x", desc: " に戻り値:int\nプレイヤーの現在のX位置を示します。\n\n >`0,1,X = @pos.x@\n// X位置を表示" },
+            { key: "pos.y", insert: "pos.y", desc: " 戻り値:int\nプレイヤーの現在のY位置を示します。\n\n >`0,1,Y = @pos.y@\n// Y位置を表示" },
+            { key: "pos.z", insert: "pos.z", desc: " 戻り値:int\nプレイヤーの現在のZ位置を示します。\n\n >`0,1,Z = @pos.z@\n// Z位置を表示" },
+            { key: "res.bronze", insert: "res.bronze", desc: " 戻り値:int\nプレイヤーのインベントリにあるブロンズのリソース量を示します。\n\n >`0,1,Bronze = @res.bronze@\n// ブロンズのリソースを表示" },
+            { key: "res.crystals", insert: "res.crystals", desc: " 戻り値:int\nプレイヤーのインベントリにあるクリスタルのリソース量を示します。\n\n >`0,1,#magenta, - @res.crystals@\n// クリスタルのリソースを表示" },
+            { key: "res.ki", insert: "res.ki", desc: " 戻り値:int\nプレイヤーのインベントリにあるキのリソース量を示します。\n\n >`0,1,Ki = @res.ki@\n// キのリソースを表示" },
+            { key: "res.stone", insert: "res.stone", desc: " 戻り値:int\nプレイヤーのインベントリにある石のリソース量を示します。\n\n >`0,1,Stone = @res.stone@\n// 石のリソースを表示" },
+            { key: "res.tar", insert: "res.tar", desc: " 戻り値:int\nプレイヤーのインベントリにあるタールのリソース量を示します。\n\n >`0,1,Tar = @res.tar@\n// タールのリソースを表示" },
+            { key: "res.wood", insert: "res.wood", desc: " 戻り値:int\nプレイヤーのインベントリにある木のリソース量を示します。\n\n ?loc = Deadwood\n  >Wood = @res.wood@\n// Deadwoodで木のリソースを表示" },
+            { key: "rng", insert: "rng", desc: " 戻り値:int\n0から9999までのランダムな整数を返します。\n\n ?rng < 5000\n  >Heads!\n:\n  >Tails!\n// 50%の確率でHeadsまたはTails" },
+            { key: "rngf", insert: "rngf", desc: " 戻り値:float\n0から1までのランダムな浮動小数点数を返します。\n\n >random float = @rngf@\n// ランダムな浮動小数点数を表示" },
+            { key: "screen.FromWorldX", insert: "screen.FromWorldX($1)", desc: " 戻り値:integer\nX軸の値をワールドスペースからスクリーンスペースに変換します。\n\n var x\nx = screen.FromWorldX(pos.x)\n>`0,1,Player position on screen: @x@,@y@\n// ワールドXをスクリーンXに変換" },
+            { key: "screen.FromWorldZ", insert: "screen.FromWorldZ($1)", desc: " 戻り値:integer\nワールドスペースのZ軸の値をスクリーンスペースのY軸に変換します。\n\n var y\ny = screen.FromWorldZ(pos.z - pos.y)\n>`0,1,Player position on screen: @x@,@y@\n// ワールドZをスクリーンYに変換" },
+            { key: "screen.h", insert: "screen.h", desc: " 戻り値:int\n画面のASCIIグリッドの高さを示します。\n\n var sh = screen.h\n>Screen height = @sh@\n// 画面高さを表示" },
+            { key: "screen.i", insert: "screen.i", desc: " 戻り値:int\nゲーム内の画面位置を示すインデックスで、プレイヤーが右端に達してスライドすると増加します。\n\n >`0,0,Screen index = @screen.i@\n// 画面インデックスを表示" },
+            { key: "screen.Next", insert: "screen.Next()", desc: " 戻り値:なし\n複数画面の場所で、カメラをプレイヤーに対して1画面前方に移動します。\n\n ?key = rightBegin\n  screen.Next()\n// 'right'キーでカメラを前方に" },
+            { key: "screen.Previous", insert: "screen.Previous()", desc: " 戻り値:なし\n複数画面の場所で、カメラをプレイヤーに対して1画面後方に移動します。\n\n ?key = leftBegin\n  screen.Previous()\n// 'left'キーでカメラを後方に" },
+            { key: "screen.ResetOffset", insert: "screen.ResetOffset()", desc: " 戻り値:なし\nカメラをプレイヤーに追従する状態にリセットし、screen.Next()やscreen.Previous()による変更を解除します。\n\n var lastScreenI = -1\n?lastScreenI ! screen.i\n  screen.ResetOffset()\nlastScreenI = screen.i\n// カメラをリセット" },
+            { key: "screen.ToWorldX", insert: "screen.ToWorldX($1)", desc: " 戻り値:integer\nX軸の値をスクリーンスペースからワールドスペースに変換します。\n\n var x\nx = screen.ToWorldX(input.x)\n>`0,2,World position of cursor: @x@,@z@\n// スクリーンXをワールドXに変換" },
+            { key: "screen.ToWorldZ", insert: "screen.ToWorldZ($1)", desc: " 戻り値:integer\nスクリーンスペースのY軸の値をワールドスペースのZ軸に変換します。\n\n var z\nz = screen.ToWorldZ(input.y)\n>`0,2,World position of cursor: @x@,@z@\n// スクリーンYをワールドZに変換" },
+            { key: "screen.w", insert: "screen.w", desc: " 戻り値:int\n画面のASCIIグリッドの幅を示します。\n\n var sw = screen.w\n>Screen width = @sw@\n// 画面幅を表示" },
+            { key: "screen.x", insert: "screen.x", desc: " 戻り値:int\nゲーム内の画面のX位置を示します。\n\n >`0,0,Screen position X = @screen.x@\n// 画面のX位置を表示" },
+            { key: "storage.Delete", insert: "storage.Delete($1)", desc: " 戻り値:なし\n指定したキーに存在する値を削除します。\n\n storage.Delete('highscore')\n// 'highscore'を削除" },
+            { key: "storage.Get", insert: "storage.Get($1)", desc: " 戻り値:value\n指定したキーから永続的な値を返します。\n\n var value = storage.Get('highscore')\n?value\n  >High Score = @value@\n:\n  >No High Score found.\n// ハイスコアを取得" },
+            { key: "storage.Get", insert: "storage.Get($1)", desc: " 戻り値:value\n指定したキーから永続的な値を返します。見つからない場合は2番目のパラメータをデフォルト値として返します。\n\n var value = storage.Get('highscore', 0)\n>High Score = @value@\n// ハイスコアがなければ0を返す" },
+            { key: "storage.Has", insert: "storage.Has($1)", desc: " 戻り値:boolean\n指定したキーが永続ストレージに存在する場合は真、そうでない場合は偽を返します。\n\n ?storage.Has('highscore')\n  var value = storage.Get('highscore')\n  >High Score = @value@\n:\n  >No High Score found.\n// ハイスコアの存在を確認" },
+            { key: "storage.Incr", insert: "storage.Incr($1)", desc: " 戻り値:integer\n指定したキーに格納された値を1増加させ、新しい値を返します。\n\n ?gameOver\n  storage.Incr('stat_TimesPlayed')\n// ゲームオーバー時にプレイ回数を増加" },
+            { key: "storage.Incr", insert: "storage.Incr($1)", desc: " 戻り値:integer\n指定したキーに格納された値を指定した量だけ増加させ、新しい値を返します。\n\n var amount\n?foundCoins\n  amount = rng%5 + 5\n  storage.Incr('coins', amount)\n// コインを見つけたら5?9増加" },
+            { key: "storage.Keys", insert: "storage.Keys()", desc: " 戻り値:array\n現在のコンテキストで利用可能なすべてのストレージキーを含む文字列の配列を取得します。\n\n var a\n?time % 30 = 0\n  a = storage.Keys()\n  for i = 0 .. a.Count()-1\n    >Key @i@ = @a[i]@\n// 30フレームごとにキーを表示" },
+            { key: "storage.Set", insert: "storage.Set($1)", desc: " 戻り値:なし\n指定したキーに値を永続ストレージに保存します。\n\n var score = 1000\nstorage.Set('highscore', score)\n// ハイスコアを1000として保存" },
+            { key: "string.Break", insert: "string.Break($1)", desc: " 戻り値:array\n文字列を指定した最大幅で複数の文字列に分割します。\n\n var s = 'The brown fox jumps over the lazy dog'\nvar a = string.Break(s, 14)\nfor i = 0 .. a.Count()-1\n  >`0,@i@,@a[i]@\n// 幅14で文字列を分割" },
+            { key: "string.Capitalize", insert: "string.Capitalize($1)", desc: " 戻り値:string\n文字列の最初の文字を大文字に変更します。\n\n var a = 'foo'\na = string.Capitalize(a)\n>@a@\n// 'Foo' を表示" },
+            { key: "string.Equals", insert: "string.Equals($1)", desc: " 戻り値:boolean\n2つの文字列パラメータを受け取り、完全に同じ場合は真を、そうでない場合は偽を返します。大文字小文字を区別します。\n\n var a = 'foo'\n?string.Equals(a, 'foo')\n  >The strings are equal\n:\n  >They are NOT equal\n// この場合、文字列は等しい" },
+            { key: "string.Format", insert: "string.Format($1)", desc: " 戻り値:string\nフォーマットテンプレートを他のパラメータの値で置き換え、最終的な合成文字列を返します。多くのフォーマットオプションをサポートする強力な関数です。\n\n var str = 'My name is {0} and I have {1} power!'\nvar result = string.Format(\n^  str,\n^  player.name,\n^  totalgp\n^)\n>@result@\n// 名前とパワーをフォーマット" },
+            { key: "string.IndexOf", insert: "string.IndexOf($1)", desc: " 戻り値:integer\n文字列変数と基準文字列を受け取り、文字列内で基準の位置を見つけます。見つからない場合は-1を返します。\n\n var a = 'Hello World!'\nvar index = string.IndexOf(a, 'llo')\n// indexは2になる" },
+            { key: "string.IndexOf", insert: "string.IndexOf($1)", desc: " 戻り値:integer\n文字列変数、基準文字列、開始インデックスを受け取り、開始位置から基準の位置を見つけます。見つからない場合は-1を返します。\n\n var a = 'Hello World!'\nvar index = string.IndexOf(a, 'llo', 4)\n// indexは-1になる（位置4から検索）" },
+            { key: "string.Join", insert: "string.Join($1)", desc: " 戻り値:string\n文字列の配列をセパレータsで結合し、単一の文字列にします。\n\n var a = ['Hello', 'World', '!']\nvar b = string.Join(';', a)\n>`0,0,@b@\n// 'Hello;World;!' を表示" },
+            { key: "string.Join", insert: "string.Join($1)", desc: " 戻り値:string\n文字列の配列をセパレータsで結合し、開始インデックスから結合します。\n\n var a = ['Hello', 'World', '!']\nvar b = string.Join(';', a, 1)\n>`0,0,@b@\n// 'World;!' を表示" },
+            { key: "string.Join", insert: "string.Join($1)", desc: " 戻り値:string\n文字列の配列をセパレータsで結合し、開始インデックスと結合する要素数を指定します。\n\n var a = ['Hello', 'World', '!']\nvar b = string.Join(';', a, 0, 2)\n>`0,0,@b@\n// 'Hello;World' を表示" },
+            { key: "string.Size", insert: "string.Size($1)", desc: " 戻り値:integer\n文字列変数を受け取り、その長さをグリフ数で計算します。\n\n var a = 'Hello World!'\nvar size = string.Size(a)\n>size = @size@\n// 文字列の長さを表示" },
+            { key: "string.Split", insert: "string.Split($1)", desc: " 戻り値:array\n文字列を受け取り、スペースがあるところで文字列の配列に分割します。\n\n var a = string.Split('Hello World !')\nfor i = 0 .. a.Count()-1\n  >`0,@i@,[@i@] = @a[i]@\n// 'Hello', 'World', '!' に分割" },
+            { key: "string.Split", insert: "string.Split($1)", desc: " 戻り値:array\n文字列とセパレータを受け取り、指定されたセパレータで文字列の配列に分割します。\n\n var a = string.Split('Hello World !', ' ', 'l')\nfor i = 0 .. a.Count()-1\n  >`0,@i@,[@i@] = @a[i]@\n// 'He', ' ', 'o', 'Wor', 'd', '!' に分割" },
+            { key: "string.Split", insert: "string.Split($1)", desc: " 戻り値:array\n文字列とセパレータを受け取り、指定されたセパレータで文字列の配列に分割し、空のエントリを破棄するかどうかを指定します。\n\n var a\na = string.Split('Hello World !', 'l', 'r', true)\nfor i = 0 .. a.Count()-1\n  >`0,@i@,[@i@] = @a[i]@\n// 'He', 'o Wo', 'd !' に分割" },
+            { key: "string.Sub", insert: "string.Sub($1)", desc: " 戻り値:string\n文字列変数と開始インデックスを受け取り、その位置から前方に文字列を分割します。\n\n var a = 'Hello World!'\nvar subString = string.Sub(a, 6)\n>substring = @subString@\n// subStringは 'World!' になる" },
+            { key: "string.Sub", insert: "string.Sub($1)", desc: " 戻り値:string\n文字列変数、開始インデックス、長さを受け取り、開始位置から指定した長さで文字列を分割します。\n\n var a = 'Hello World!'\nvar subString = string.Sub(a, 6, 3)\n>substring = @subString@\n// subStringは 'Wor' になる" },
+            { key: "string.ToLower", insert: "string.ToLower($1)", desc: " 戻り値:string\n文字列のすべての文字を小文字に変更します。\n\n var a = 'Foo'\na = string.ToLower(a)\n>@a@\n// 'foo' を画面に表示" },
+            { key: "string.ToUpper", insert: "string.ToUpper($1)", desc: " 戻り値:string\n文字列のすべての文字を大文字に変更します。\n\n var a = 'Foo'\na = string.ToUpper(a)\n>@a@\n// 'FOO' を画面に表示" },
+            { key: "summon.count", insert: "summon.count", desc: " 戻り値:int\nゲーム内に現在存在する召喚された味方の数を返します。\n\n ?summon.count = 0 &\n^ item.CanActivate()\n  equipL talisman\n  activate L\n// 召喚が0でアビリティ使用可能ならtalismanを装備" },
+            { key: "summon.GetId", insert: "summon.GetId($1)", desc: " 戻り値:string\n指定したインデックスの召喚のIDを返します。インデックスはオプションで、デフォルトは0（最初の召喚）。該当する召喚がない場合はnullを返します。\n\n ?summon.GetId() ! 'cinderwisp' &\n^ item.CanActivate()\n  equipR fire talisman\n  activate R\n// 召喚が'cinderwisp'でなければfire talismanを使用" },
+            { key: "summon.GetName", insert: "summon.GetName($1)", desc: " 戻り値:string\n指定したインデックスの召喚のローカライズされた名前を返します。インデックスはオプションで、デフォルトは0。該当する召喚がない場合はnullを返します。\n\n >`0,1,Summon:@summon.GetName()@\n// 最初の召喚の名前を表示" },
+            { key: "summon.GetState", insert: "summon.GetState($1)", desc: " 戻り値:int\n指定したインデックスの召喚の現在の状態を表す数値を返します。インデックスはオプションで、デフォルトは0。該当する召喚がない場合は-1を返します。\n\n >`0,1,Summon state:@summon.GetState()@\n// 最初の召喚の状態を表示" },
+            { key: "summon.GetTime", insert: "summon.GetTime($1)", desc: " 戻り値:int\n指定したインデックスの召喚の現在の状態での経過フレーム数を返します。インデックスはオプションで、デフォルトは0。該当する召喚がない場合は-1を返します。\n\n >`0,1,Summon time:@summon.GetTime()@\n// 最初の召喚の経過時間を表示" },
+            { key: "summon.GetVar", insert: "summon.GetVar($1)", desc: " 戻り値:any\n召喚のカスタム変数の値を返します。召喚の種類によって公開される変数は異なります。インデックスはオプションで、デフォルトは0。該当する召喚がない場合はnullを返します。変数名が無効な場合はエラーを表示します。\n\n ?summon.GetId() = cinderwisp &\n^summon.GetVar('ignition') > 2\n  activate cinderwisp\n// 'ignition'が2超ならcinderwispを起動" },
+            { key: "sys.cacheRemoteFiles", insert: "sys.cacheRemoteFiles", desc: " 戻り値:boolean\nリモートでインポートされたファイルをラン間でキャッシュするかどうかを示します。デフォルトはtrue。falseに設定すると、場所画面からプレイ開始時にスクリプトが再ダウンロードされます。\n\n ?key = upBegin\n  sys.cacheRemoteFiles = !sys.cacheRemoteFiles\n  ?sys.cacheRemoteFiles\n    >Remote caching ENABLED\n  :\n    >Remote caching DISABLED\n// 'up'キーでキャッシュを切り替え" },
+            { key: "sys.fileUrl", insert: "sys.fileUrl", desc: " 戻り値:string\nスクリプトをインポートする際の現在のファイルパスを取得します（読み取り専用）。デフォルト値はデバイスに依存します。\n\n >`0,1,fileUrl = @sys.fileUrl@\n// 現在のファイルURLを表示" },
+            { key: "sys.isMobile", insert: "sys.isMobile", desc: " 戻り値:bool\nユーザーがAndroidまたはiOSを使用している場合に真を返します。\n\n sys.isMobile\n// モバイルデバイスかチェック" },
+            { key: "sys.isPC", insert: "sys.isPC", desc: " 戻り値:bool\nユーザーがWin/Mac/Linuxを使用している場合に真を返します。\n\n sys.isPC\n// PCかチェック" },
+            { key: "sys.MindConnect", insert: "sys.MindConnect()", desc: " 戻り値:なし\n実験的機能。Mind Stoneにこの行だけがある場合、他のプログラム（例: Pythonスクリプト）からの接続を待つインターフェースを有効にします。\n\n sys.MindConnect()\n// Mind Stoneで外部接続を有効化" },
+            { key: "sys.os", insert: "sys.os", desc: " 戻り値:string\nユーザーのオペレーティングシステムを返します（例: 'Android', 'iOS', 'Linux', 'OSX', 'Windows'）。\n\n >sys.os\n// OSを表示" },
+            { key: "sys.SetFileUrl", insert: "sys.SetFileUrl($1)", desc: " 戻り値:なし\n'import'または'new'コマンドで使用されるインポートスクリプトの起源を変更します。Mind Stoneでのみ呼び出し可能で、リモートURLや'local'、'remote'を受け入れます。\n\n sys.SetFileUrl(\n^'https://MyCoolDomain.com/scripts/')\nimport MyCombatScript\n// カスタムURLからスクリプトをインポート" },
+            { key: "te.GetTID", insert: "te.GetTID($1)", desc: " 戻り値:string\n指定したテキストのテキスト識別子（TID）を返します。入力テキストはプレイヤーの選択言語である必要があります。\n\n var tid = te.GetTID('Play')\n>`0,1,@tid@\n// 'tid_button_play' を表示" },
+            { key: "te.language", insert: "te.language", desc: " 戻り値:string\nプレイヤーが設定で選択した言語のコードを返します。可能な値: EN, PT-BR, ZH-CN, ZH-TW, FR, DE, RU, ES-LA, ES-EU, JP, KR, TK。\n\n var lang = te.language\n>Language = @lang@\n// 選択された言語を表示" },
+            { key: "te.ToEnglish", insert: "te.ToEnglish($1)", desc: " 戻り値:string\n指定したテキストをプレイヤーの選択言語から元の英語テキストに翻訳します。翻訳が見つからない場合は入力テキストを返します。\n\n >`0,1,@te.ToEnglish('Jogar')@\n// ポルトガル語設定なら 'Play' を表示" },
+            { key: "te.xt", insert: "te.xt($1)", desc: " 戻り値:string\n指定した英語テキストをプレイヤーの選択言語に翻訳します。翻訳が見つからない場合は入力テキストを返します。\n\n var button = ui.AddButton()\nbutton.text = te.xt('Play')\n// 'Play'を翻訳してボタンに設定" },
+            { key: "text.align", insert: "text.align", desc: " 戻り値:string\nボックス内のテキストの配置/調整を示します。デフォルト値は'left'。可能な値: left, center, right。\n\n text.align = 'center'\n// テキストを中央揃えに設定" },
+            { key: "text.color", insert: "text.color", desc: " 戻り値:string\nテキストの色をRGB16進数形式で示します。\n\n text.color = '#ff0000'\n// テキストの色を赤に設定" },
+            { key: "text.lines", insert: "text.lines", desc: " 戻り値:string[]\nテキストボックスが内容をフォーマットした後の分割されたテキスト行の文字列配列を示します。色メタデータは除外されます。\n\n var lines = text.lines\n// テキストの行配列を取得" },
+            { key: "text.text", insert: "text.text", desc: " 戻り値:string\nテキストボックスの完全な内容を示します。[color=#rrggbb][/color]メタデータで部分的に色付け可能です。\n\n ?loc.begin\n  var t = ui.AddText()\n  t.text = 'Hello [color=#red]World[/color]!'\n// 'World' を赤で表示" },
+            { key: "time", insert: "time", desc: " 戻り値:int\n現在の場所のフレーム番号を返します。\n\n ?time % 300 = 0\n  >Every 10 seconds you'll see this message\n// 10秒ごとにメッセージ" },
+            { key: "time.day", insert: "time.day", desc: " 戻り値:int\nプレイヤーのコンピュータのローカルシステム時間（日）を返します。\n\n >`0,0,@time.year@/@time.month@/@time.day@\n^ @time.hour@:@time.minute@:@time.second@\n// ローカル時間を表示" },
+            { key: "time.FormatCasual", insert: "time.FormatCasual($1)", desc: " 戻り値:string\nフレーム数を人間が読みやすい文字列形式（例: '1m 23s'）に変換します。\n\n >`0,0,Current time =\n^ @time.FormatCasual(totaltime)@\n// 現在の時間をカジュアル形式で表示" },
+            { key: "time.FormatCasual", insert: "time.FormatCasual($1)", desc: " 戻り値:string\nフレーム数を人間が読みやすい文字列形式（例: '1m 23s'）に変換します。2番目のパラメータ（bool）はオプションで、trueの場合は精度が最大になります。\n\n >`0,0,Current time =\n^ @time.FormatCasual(totaltime, true)@\n// 現在の時間を高精度のカジュアル形式で表示" },
+            { key: "time.FormatDigital", insert: "time.FormatDigital($1)", desc: " 戻り値:string\nフレーム数を人間が読みやすい文字列形式（例: '1:23'）に変換します。\n\n >`0,0,Current time =\n^ @time.FormatDigital(totaltime)@\n// 現在の時間をデジタル形式で表示" },
+            { key: "time.FormatDigital", insert: "time.FormatDigital($1)", desc: " 戻り値:string\nフレーム数を人間が読みやすい文字列形式（例: '1:23'）に変換します。2番目のパラメータ（bool）はオプションで、trueの場合は精度が最大になります。\n\n >`0,0,Current time =\n^ @time.FormatDigital(totaltime, true)@\n// 現在の時間を高精度のデジタル形式で表示" },
+            { key: "time.hour", insert: "time.hour", desc: " 戻り値:int\nプレイヤーのコンピュータのローカルシステム時間（時）を返します。\n\n >`0,0,@time.year@/@time.month@/@time.day@\n^ @time.hour@:@time.minute@:@time.second@\n// ローカル時間を表示" },
+            { key: "time.minute", insert: "time.minute", desc: " 戻り値:int\nプレイヤーのコンピュータのローカルシステム時間（分）を返します。\n\n >`0,0,@time.year@/@time.month@/@time.day@\n^ @time.hour@:@time.minute@:@time.second@\n// ローカル時間を表示" },
+            { key: "time.month", insert: "time.month", desc: " 戻り値:int\nプレイヤーのコンピュータのローカルシステム時間（月）を返します。\n\n >`0,0,@time.year@/@time.month@/@time.day@\n^ @time.hour@:@time.minute@:@time.second@\n// ローカル時間を表示" },
+            { key: "time.msbn", insert: "time.msbn", desc: " 戻り値:BigNumber\n1970-01-01T00:00:00Zからの経過ミリ秒数を表すUnix時間を返します。うるう秒は考慮されません。\n\n >@time.msbn@\n// Unix時間を表示" },
+            { key: "time.second", insert: "time.second", desc: " 戻り値:int\nプレイヤーのコンピュータのローカルシステム時間（秒）を返します。\n\n >`0,0,@time.year@/@time.month@/@time.day@\n^ @time.hour@:@time.minute@:@time.second@\n// ローカル時間を表示" },
+            { key: "time.year", insert: "time.year", desc: " 戻り値:int\nプレイヤーのコンピュータのローカルシステム時間（年）を返します。\n\n >`0,0,@time.year@/@time.month@/@time.day@\n^ @time.hour@:@time.minute@:@time.second@\n// ローカル時間を表示" },
+            { key: "totalgp", insert: "totalgp", desc: " 戻り値:int\nインベントリの総'Gear Power'を返します。アイテムの星レベルとエンチャントボーナスから計算されます。\n\n >My gear power = @totalgp@\n// 総ギアパワーを表示" },
+            { key: "totaltime", insert: "totaltime", desc: " 戻り値:int\nボスのサブロケーションがある場合に累積された現在の場所のフレーム番号を返します。\n\n >`0,0,Current time = @totaltime@ frames\n// 累積時間を表示" },
+            { key: "Type({var})", insert: "Type($1)", desc: " 戻り値:string\n変数の型を評価し、文字列表現を返します。可能な型: 'string', 'int', 'bool', 'function', 'object', 'null'。\n\n var a = 0\n?Type(a) = 'int'\n  >Variable 'a' is an integer.\n// 'a' が整数型か確認" },
+            { key: "ui.AddAnim", insert: "ui.AddAnim($1)", desc: " 戻り値:Anim\nルートパネルにAnimオブジェクトを追加します。アニメーションスプライトシートをパラメータとして受け取ります。\n\n ?loc.begin\n  ui.AddAnim(ascii\n\\o)\n%%\n(o/\nasciiend)\n// 開始時にアニメーションを追加" },
+            { key: "ui.AddButton", insert: "ui.AddButton()", desc: " 戻り値:Button\nルートパネルにButtonオブジェクトを追加します。\n\n func OnPressed()\n  > Hello World!\n\n?loc.begin\n  var button = ui.AddButton()\n  button.y = 1\n  button.text = 'Press me'\n  button.SetPressed(OnPressed)\n// ボタンを追加し、押された時にメッセージ" },
+            { key: "ui.AddPanel", insert: "ui.AddPanel()", desc: " 戻り値:Panel\nルートパネルにPanelオブジェクトを追加します。パネルは他の要素のコンテナとして重要なオブジェクト型です。\n\n ?loc.begin\n  var p = ui.AddPanel()\n  p.color = #red\n// 赤いパネルを追加" },
+            { key: "ui.AddStyle", insert: "ui.AddStyle()", desc: " 戻り値:int\nパネルやボタンなどの矩形コンポーネントの描画に使用できる新しいスタイルを追加し、新しいスタイルのID番号を返します。同一スタイルの複数追加を防ぎます。\n\n var customStyle = ui.AddStyle('\n^123\n^456\n^789')\n?loc.begin\n  var p = ui.AddPanel()\n  p.style = customStyle\n// カスタムスタイルを追加して適用" },
+            { key: "ui.AddText", insert: "ui.AddText()", desc: " 戻り値:Text\nルートパネルにTextオブジェクトを追加します。\n\n ?loc.begin\n  var t = ui.AddText()\n  t.text = 'Hello World!'\n// テキストを追加" },
+            { key: "ui.AddText", insert: "ui.AddText($1)", desc: " 戻り値:Text\nルートパネルに指定した文字列でTextオブジェクトを追加します。\n\n ?loc.begin\n  var t = ui.AddText('Hello World!')\n// 'Hello World!' のテキストを追加" },
+            { key: "ui.Clear", insert: "ui.Clear()", desc: " 戻り値:なし\nメインコンテナからすべてのUI要素を削除します。\n\n ?key = backBegin\n  ui.Clear()\n// 'back'キーでUIをクリア" },
+            { key: "ui.OpenInv", insert: "ui.OpenInv()", desc: " 戻り値:なし\nインベントリ画面を開きます。\n\n ui.OpenInv()\n// インベントリ画面を開く" },
+            { key: "ui.OpenMind", insert: "ui.OpenMind()", desc: " 戻り値:なし\nMind Stone画面を開きます。\n\n ui.OpenMind()\n// Mind Stone画面を開く" },
+            { key: "ui.root", insert: "ui.root", desc: " 戻り値:Panel\nUIツリー全体が構築されるベースUIオブジェクトです。\n\n disable hud\nui.root.visible = true\n// HUDを無効化し、ルートを可視化" },
+            { key: "ui.ShowBanner", insert: "ui.ShowBanner($1)", desc: " 戻り値:なし\n最大2つのメッセージを含むアニメーションバナーを表示します。ui.ShowBanner()が呼ばれるたびにバナーのアニメーションがリスタートします。\n\n ?time = 120\n  ui.ShowBanner('Hello World!')\n// 120フレームでバナーを表示" },
+            { key: "ui.ShowBanner", insert: "ui.ShowBanner($1)", desc: " 戻り値:なし\n2つのメッセージを含むアニメーションバナーを表示します。ui.ShowBanner()が呼ばれるたびにバナーのアニメーションがリスタートします。\n\n ?time = 120\n  ui.ShowBanner('Hello', 'World!')\n// 120フレームで2つのメッセージを持つバナーを表示" },
+            { key: "utc.day", insert: "utc.day", desc: " 戻り値:int\n現在のUTC時間（日）を返します。\n\n var utcZ = utc.year*356*12*24*30 +\n^utc.month*12*24 + utc.day*24+utc.hour\n// UTC時間を計算" },
+            { key: "utc.hour", insert: "utc.hour", desc: " 戻り値:int\n現在のUTC時間（時）を返します。\n\n var utcZ = utc.year*356*12*24*30 +\n^utc.month*12*24 + utc.day*24+utc.hour\n// UTC時間を計算" },
+            { key: "utc.minute", insert: "utc.minute", desc: " 戻り値:int\n現在のUTC時間（分）を返します。\n\n var utcZ = utc.year*356*12*24*30 +\n^utc.month*12*24 + utc.day*24+utc.hour\n// UTC時間を計算" },
+            { key: "utc.month", insert: "utc.month", desc: " 戻り値:int\n現在のUTC時間（月）を返します。\n\n var utcZ = utc.year*356*12*24*30 +\n^utc.month*12*24 + utc.day*24+utc.hour\n// UTC時間を計算" },
+            { key: "utc.second", insert: "utc.second", desc: " 戻り値:int\n現在のUTC時間（秒）を返します。\n\n var utcZ = utc.year*356*12*24*30 +\n^utc.month*12*24 + utc.day*24+utc.hour\n// UTC時間を計算" },
+            { key: "utc.year", insert: "utc.year", desc: " 戻り値:int\n現在のUTC時間（年）を返します。\n\n var utcZ = utc.year*356*12*24*30 +\n^utc.month*12*24 + utc.day*24+utc.hour\n// UTC時間を計算" },
+            { key: "var", insert: "var", desc: " 戻り値:なし\n数学的、論理的、文字列操作に使用できる変数を宣言します。ライフサイクルや動作は他の言語と異なる場合があります。\n\n var message = Hello World!\n>@message@\n// 'Hello World!' を表示" },
+            { key: "Aether Talisman", insert: "talisman_aether", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Bardiche", insert: "bardiche", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Bashing Shield", insert: "bash", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Blade of the Fallen God", insert: "blade", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Cinderwisp Devour", insert: "cinderwisp", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Cultist Mask", insert: "mask", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Dashing Shield", insert: "dash", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Fire Talisman", insert: "talisman_fire", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Hatchet", insert: "hatchet", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Heavy Hammer", insert: "heavy_hammer", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Mind Stone", insert: "mind", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Quarterstaff", insert: "quarterstaff", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Skeleton Arm", insert: "skeleton_arm", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Voidweaver Devour", insert: "voidweaver", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Calamity Wand", insert: "wand_aether", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Explosive Wand", insert: "wand_fire", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Frost Wand", insert: "wand_ice", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Plague Wand", insert: "wand_poison", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Reset Wand", insert: "wand_vigor", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Gravity Wand", insert: "wand_stone", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Grasping Staff", insert: "staff_aether", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Infernal Staff", insert: "staff_fire", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Eternity Staff", insert: "staff_ice", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Berserker Staff", insert: "staff_poison", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Prevention Staff", insert: "staff_vigor", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Acrobatic Staff", insert: "staff_stone", desc: "item.GetCooldown()の中などで使用" },
+            { key: "Shovel", insert: "shovel", desc: "item.GetCooldown()の中などで使用" },
+            { key: "import Chisel ", insert: "import Chisel ", desc: "importで呼び出す" },
+            { key: "import CozyCave", insert: "import CozyCave", desc: "importで呼び出す" },
+            { key: "import Fishing", insert: "import Fishing", desc: "importで呼び出す" },
+            { key: "import TrainAdventure ", insert: "import TrainAdventure ", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Acrocorn", insert: "import Cosmetics/Acrocorn", desc: "importで呼び出す" },
+            { key: "import Cosmetics/AcronianGuardian", insert: "import Cosmetics/AcronianGuardian", desc: "importで呼び出す" },
+            { key: "import Cosmetics/AuroraBorealis", insert: "import Cosmetics/AuroraBorealis", desc: "importで呼び出す" },
+            { key: "import Cosmetics/BadApple", insert: "import Cosmetics/BadApple", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Beach", insert: "import Cosmetics/Beach", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Bolesh", insert: "import Cosmetics/Bolesh", desc: "importで呼び出す" },
+            { key: "import Cosmetics/CaveParty", insert: "import Cosmetics/CaveParty", desc: "importで呼び出す" },
+            { key: "import Cosmetics/ChristmasTree", insert: "import Cosmetics/ChristmasTree", desc: "importで呼び出す" },
+            { key: "import Cosmetics/ChrWings", insert: "import Cosmetics/ChrWings", desc: "importで呼び出す" },
+            { key: "import Cosmetics/ConfettiHead", insert: "import Cosmetics/ConfettiHead", desc: "importで呼び出す" },
+            { key: "import Cosmetics/CultGroup", insert: "import Cosmetics/CultGroup", desc: "importで呼び出す" },
+            { key: "import Cosmetics/DragonWorm", insert: "import Cosmetics/DragonWorm", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Drill", insert: "import Cosmetics/Drill", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Explosion", insert: "import Cosmetics/Explosion", desc: "importで呼び出す" },
+            { key: "import Cosmetics/FireFly", insert: "import Cosmetics/FireFly", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Fireworks", insert: "import Cosmetics/Fireworks", desc: "importで呼び出す" },
+            { key: "import Cosmetics/FrogInvasion", insert: "import Cosmetics/FrogInvasion", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Giftbag", insert: "import Cosmetics/Giftbag", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Infected", insert: "import Cosmetics/Infected", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Knight", insert: "import Cosmetics/Knight", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Mech", insert: "import Cosmetics/Mech", desc: "importで呼び出す" },
+            { key: "import Cosmetics/MineManager", insert: "import Cosmetics/MineManager", desc: "importで呼び出す" },
+            { key: "import Cosmetics/MushroomAnt", insert: "import Cosmetics/MushroomAnt", desc: "importで呼び出す" },
+            { key: "import Cosmetics/MushroomHead", insert: "import Cosmetics/MushroomHead", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Party", insert: "import Cosmetics/Party", desc: "importで呼び出す" },
+            { key: "import Cosmetics/PartyNoisemaker", insert: "import Cosmetics/PartyNoisemaker", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Portobello", insert: "import Cosmetics/Portobello", desc: "importで呼び出す" },
+            { key: "import Cosmetics/PumpkinCarving", insert: "import Cosmetics/PumpkinCarving", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Pumpkins", insert: "import Cosmetics/Pumpkins", desc: "importで呼び出す" },
+            { key: "import Cosmetics/quips", insert: "import Cosmetics/quips", desc: "importで呼び出す" },
+            { key: "import Cosmetics/SantaFlyingSleigh", insert: "import Cosmetics/SantaFlyingSleigh", desc: "importで呼び出す" },
+            { key: "import Cosmetics/SillyGoose", insert: "import Cosmetics/SillyGoose", desc: "importで呼び出す" },
+            { key: "import Cosmetics/SleepyStonehead", insert: "import Cosmetics/SleepyStonehead", desc: "importで呼び出す" },
+            { key: "import Cosmetics/SpookyScarySkeletons", insert: "import Cosmetics/SpookyScarySkeletons", desc: "importで呼び出す" },
+            { key: "import Cosmetics/SpringBloom", insert: "import Cosmetics/SpringBloom", desc: "importで呼び出す" },
+            { key: "import Cosmetics/StoneClause", insert: "import Cosmetics/StoneClause", desc: "importで呼び出す" },
+            { key: "import Cosmetics/StoneheadFall", insert: "import Cosmetics/StoneheadFall", desc: "importで呼び出す" },
+            { key: "import Cosmetics/StoneHeadless", insert: "import Cosmetics/StoneHeadless", desc: "importで呼び出す" },
+            { key: "import Cosmetics/StonePhone", insert: "import Cosmetics/StonePhone", desc: "importで呼び出す" },
+            { key: "import Cosmetics/SuperStoneHead", insert: "import Cosmetics/SuperStoneHead", desc: "importで呼び出す" },
+            { key: "import Cosmetics/TheSun", insert: "import Cosmetics/TheSun", desc: "importで呼び出す" },
+            { key: "import Cosmetics/Turret", insert: "import Cosmetics/Turret", desc: "importで呼び出す" },
+            { key: "import Cosmetics/TwinSuns", insert: "import Cosmetics/TwinSuns", desc: "importで呼び出す" },
+            { key: "import Cosmetics/WavyScarf", insert: "import Cosmetics/WavyScarf", desc: "importで呼び出す" },
+            { key: "import Cosmetics/WitchBroom ", insert: "import Cosmetics/WitchBroom ", desc: "importで呼び出す" },
+            { key: "import Foes/FlowerFoes", insert: "import Foes/FlowerFoes", desc: "importで呼び出す" },
+            { key: "import Foes/PallasCrown", insert: "import Foes/PallasCrown", desc: "importで呼び出す" },
+            { key: "import Foes/PumpkinWraith", insert: "import Foes/PumpkinWraith", desc: "importで呼び出す" },
+            { key: "import Foes/SurferGuardian ", insert: "import Foes/SurferGuardian ", desc: "importで呼び出す" },
+            { key: "import Games/2048", insert: "import Games/2048", desc: "importで呼び出す" },
+            { key: "import Games/Arena", insert: "import Games/Arena", desc: "importで呼び出す" },
+            { key: "import Games/Asteroids", insert: "import Games/Asteroids", desc: "importで呼び出す" },
+            { key: "import Games/Blackjack", insert: "import Games/Blackjack", desc: "importで呼び出す" },
+            { key: "import Games/BurgerRush", insert: "import Games/BurgerRush", desc: "importで呼び出す" },
+            { key: "import Games/cColorTetris", insert: "import Games/cColorTetris", desc: "importで呼び出す" },
+            { key: "import Games/cGomoku", insert: "import Games/cGomoku", desc: "importで呼び出す" },
+            { key: "import Games/cTetris", insert: "import Games/cTetris", desc: "importで呼び出す" },
+            { key: "import Games/DigitsPuzzle", insert: "import Games/DigitsPuzzle", desc: "importで呼び出す" },
+            { key: "import Games/FeedABat", insert: "import Games/FeedABat", desc: "importで呼び出す" },
+            { key: "import Games/FlyupText", insert: "import Games/FlyupText", desc: "importで呼び出す" },
+            { key: "import Games/FrogBog", insert: "import Games/FrogBog", desc: "importで呼び出す" },
+            { key: "import Games/FrogJump", insert: "import Games/FrogJump", desc: "importで呼び出す" },
+            { key: "import Games/GetawayDriver", insert: "import Games/GetawayDriver", desc: "importで呼び出す" },
+            { key: "import Games/GrowPlants", insert: "import Games/GrowPlants", desc: "importで呼び出す" },
+            { key: "import Games/KillerRPG", insert: "import Games/KillerRPG", desc: "importで呼び出す" },
+            { key: "import Games/Metallophone", insert: "import Games/Metallophone", desc: "importで呼び出す" },
+            { key: "import Games/Minesweeper", insert: "import Games/Minesweeper", desc: "importで呼び出す" },
+            { key: "import Games/PlayingCards", insert: "import Games/PlayingCards", desc: "importで呼び出す" },
+            { key: "import Games/Simon", insert: "import Games/Simon", desc: "importで呼び出す" },
+            { key: "import Games/Snake", insert: "import Games/Snake", desc: "importで呼び出す" },
+            { key: "import Games/SpearThrowing", insert: "import Games/SpearThrowing", desc: "importで呼び出す" },
+            { key: "import Games/SSRPGIdle", insert: "import Games/SSRPGIdle", desc: "importで呼び出す" },
+            { key: "import Games/StoneasaurGame", insert: "import Games/StoneasaurGame", desc: "importで呼び出す" },
+            { key: "import Games/StoneBoxman", insert: "import Games/StoneBoxman", desc: "importで呼び出す" },
+            { key: "import Games/StoneDungeon", insert: "import Games/StoneDungeon", desc: "importで呼び出す" },
+            { key: "import Games/Stonemon", insert: "import Games/Stonemon", desc: "importで呼び出す" },
+            { key: "import Games/Sudoku", insert: "import Games/Sudoku", desc: "importで呼び出す" },
+            { key: "import Games/SudokuEnchant", insert: "import Games/SudokuEnchant", desc: "importで呼び出す" },
+            { key: "import Games/SwordGame", insert: "import Games/SwordGame", desc: "importで呼び出す" },
+            { key: "import Games/TowerDefense", insert: "import Games/TowerDefense", desc: "importで呼び出す" },
+            { key: "import Games/WhackaMole ", insert: "import Games/WhackaMole ", desc: "importで呼び出す" },
+            { key: "import Hats/CatHat", insert: "import Hats/CatHat", desc: "importで呼び出す" },
+            { key: "import Hats/ChefHat", insert: "import Hats/ChefHat", desc: "importで呼び出す" },
+            { key: "import Hats/DefectFaceplate", insert: "import Hats/DefectFaceplate", desc: "importで呼び出す" },
+            { key: "import Hats/DiscoVisor", insert: "import Hats/DiscoVisor", desc: "importで呼び出す" },
+            { key: "import Hats/Enchanthead", insert: "import Hats/Enchanthead", desc: "importで呼び出す" },
+            { key: "import Hats/Headphones", insert: "import Hats/Headphones", desc: "importで呼び出す" },
+            { key: "import Hats/Helmet", insert: "import Hats/Helmet", desc: "importで呼び出す" },
+            { key: "import Hats/HrimnirHair", insert: "import Hats/HrimnirHair", desc: "importで呼び出す" },
+            { key: "import Hats/IroncladMask", insert: "import Hats/IroncladMask", desc: "importで呼び出す" },
+            { key: "import Hats/JesterHat", insert: "import Hats/JesterHat", desc: "importで呼び出す" },
+            { key: "import Hats/LanternTalisman", insert: "import Hats/LanternTalisman", desc: "importで呼び出す" },
+            { key: "import Hats/MushroomHat", insert: "import Hats/MushroomHat", desc: "importで呼び出す" },
+            { key: "import Hats/PirateHat", insert: "import Hats/PirateHat", desc: "importで呼び出す" },
+            { key: "import Hats/ReindeerHead", insert: "import Hats/ReindeerHead", desc: "importで呼び出す" },
+            { key: "import Hats/SantaHat", insert: "import Hats/SantaHat", desc: "importで呼び出す" },
+            { key: "import Hats/ShuffleHat", insert: "import Hats/ShuffleHat", desc: "importで呼び出す" },
+            { key: "import Hats/SilentSkull", insert: "import Hats/SilentSkull", desc: "importで呼び出す" },
+            { key: "import Hats/Skully", insert: "import Hats/Skully", desc: "importで呼び出す" },
+            { key: "import Hats/StarCloak", insert: "import Hats/StarCloak", desc: "importで呼び出す" },
+            { key: "import Hats/Treeman", insert: "import Hats/Treeman", desc: "importで呼び出す" },
+            { key: "import Hats/WitchHat ", insert: "import Hats/WitchHat ", desc: "importで呼び出す" },
+            { key: "import Pets/Bear", insert: "import Pets/Bear", desc: "importで呼び出す" },
+            { key: "import Pets/BlackHole", insert: "import Pets/BlackHole", desc: "importで呼び出す" },
+            { key: "import Pets/Boo", insert: "import Pets/Boo", desc: "importで呼び出す" },
+            { key: "import Pets/Bunny", insert: "import Pets/Bunny", desc: "importで呼び出す" },
+            { key: "import Pets/CatBalloon", insert: "import Pets/CatBalloon", desc: "importで呼び出す" },
+            { key: "import Pets/CavePets", insert: "import Pets/CavePets", desc: "importで呼び出す" },
+            { key: "import Pets/Chick", insert: "import Pets/Chick", desc: "importで呼び出す" },
+            { key: "import Pets/Crab", insert: "import Pets/Crab", desc: "importで呼び出す" },
+            { key: "import Pets/Cranius", insert: "import Pets/Cranius", desc: "importで呼び出す" },
+            { key: "import Pets/Dog", insert: "import Pets/Dog", desc: "importで呼び出す" },
+            { key: "import Pets/Dracula", insert: "import Pets/Dracula", desc: "importで呼び出す" },
+            { key: "import Pets/Dragon", insert: "import Pets/Dragon", desc: "importで呼び出す" },
+            { key: "import Pets/Fly", insert: "import Pets/Fly", desc: "importで呼び出す" },
+            { key: "import Pets/FoesNoMore", insert: "import Pets/FoesNoMore", desc: "importで呼び出す" },
+            { key: "import Pets/Frog", insert: "import Pets/Frog", desc: "importで呼び出す" },
+            { key: "import Pets/JackOLantern", insert: "import Pets/JackOLantern", desc: "importで呼び出す" },
+            { key: "import Pets/LegsTurkey", insert: "import Pets/LegsTurkey", desc: "importで呼び出す" },
+            { key: "import Pets/Mushroom", insert: "import Pets/Mushroom", desc: "importで呼び出す" },
+            { key: "import Pets/Panda", insert: "import Pets/Panda", desc: "importで呼び出す" },
+            { key: "import Pets/Pomeranian", insert: "import Pets/Pomeranian", desc: "importで呼び出す" },
+            { key: "import Pets/RoyaltyDeliverer", insert: "import Pets/RoyaltyDeliverer", desc: "importで呼び出す" },
+            { key: "import Pets/Skully", insert: "import Pets/Skully", desc: "importで呼び出す" },
+            { key: "import Pets/Snail", insert: "import Pets/Snail", desc: "importで呼び出す" },
+            { key: "import Pets/SnowBunny", insert: "import Pets/SnowBunny", desc: "importで呼び出す" },
+            { key: "import Pets/Snowman", insert: "import Pets/Snowman", desc: "importで呼び出す" },
+            { key: "import Pets/Spider", insert: "import Pets/Spider", desc: "importで呼び出す" },
+            { key: "import Pets/SpringBuddy", insert: "import Pets/SpringBuddy", desc: "importで呼び出す" },
+            { key: "import Pets/Stonehead", insert: "import Pets/Stonehead", desc: "importで呼び出す" },
+            { key: "import Pets/Sun", insert: "import Pets/Sun", desc: "importで呼び出す" },
+            { key: "import Pets/TarPusher", insert: "import Pets/TarPusher", desc: "importで呼び出す" },
+            { key: "import Pets/Wisp ", insert: "import Pets/Wisp ", desc: "importで呼び出す" },
+            { key: "import UI/A2S", insert: "import UI/A2S", desc: "importで呼び出す" },
+            { key: "import UI/BetterInfo2", insert: "import UI/BetterInfo2", desc: "importで呼び出す" },
+            { key: "import UI/BetterText", insert: "import UI/BetterText", desc: "importで呼び出す" },
+            { key: "import UI/BorderClock", insert: "import UI/BorderClock", desc: "importで呼び出す" },
+            { key: "import UI/BossBar", insert: "import UI/BossBar", desc: "importで呼び出す" },
+            { key: "import UI/BossHealthBar", insert: "import UI/BossHealthBar", desc: "importで呼び出す" },
+            { key: "import UI/BragMeter", insert: "import UI/BragMeter", desc: "importで呼び出す" },
+            { key: "import UI/Calculator", insert: "import UI/Calculator", desc: "importで呼び出す" },
+            { key: "import UI/CDTime", insert: "import UI/CDTime", desc: "importで呼び出す" },
+            { key: "import UI/ClickAbilities", insert: "import UI/ClickAbilities", desc: "importで呼び出す" },
+            { key: "import UI/damageFlash", insert: "import UI/damageFlash", desc: "importで呼び出す" },
+            { key: "import UI/DragController", insert: "import UI/DragController", desc: "importで呼び出す" },
+            { key: "import UI/FaceHUD", insert: "import UI/FaceHUD", desc: "importで呼び出す" },
+            { key: "import UI/FoeStateTracker", insert: "import UI/FoeStateTracker", desc: "importで呼び出す" },
+            { key: "import UI/FreeChestTracker", insert: "import UI/FreeChestTracker", desc: "importで呼び出す" },
+            { key: "import UI/InfoFloat", insert: "import UI/InfoFloat", desc: "importで呼び出す" },
+            { key: "import UI/LiveSplit", insert: "import UI/LiveSplit", desc: "importで呼び出す" },
+            { key: "import UI/MindstoneButton", insert: "import UI/MindstoneButton", desc: "importで呼び出す" },
+            { key: "import UI/MiniMap", insert: "import UI/MiniMap", desc: "importで呼び出す" },
+            { key: "import UI/MusicBox", insert: "import UI/MusicBox", desc: "importで呼び出す" },
+            { key: "import UI/OkamiroyUtils", insert: "import UI/OkamiroyUtils", desc: "importで呼び出す" },
+            { key: "import UI/PefWindow", insert: "import UI/PefWindow", desc: "importで呼び出す" },
+            { key: "import UI/PlayerStateTracker", insert: "import UI/PlayerStateTracker", desc: "importで呼び出す" },
+            { key: "import UI/RecordPlayer", insert: "import UI/RecordPlayer", desc: "importで呼び出す" },
+            { key: "import UI/ScrollText", insert: "import UI/ScrollText", desc: "importで呼び出す" },
+            { key: "import UI/StealMeter", insert: "import UI/StealMeter", desc: "importで呼び出す" },
+            { key: "import UI/ToolBelt", insert: "import UI/ToolBelt", desc: "importで呼び出す" },
+            { key: "import UI/VisualStatusEffects", insert: "import UI/VisualStatusEffects", desc: "importで呼び出す" },
+            { key: "import UI/ChiselFiles/Additional Documentation", insert: "import UI/ChiselFiles/Additional Documentation", desc: "importで呼び出す" },
+            { key: "import UI/ChiselFiles/SetLayer", insert: "import UI/ChiselFiles/SetLayer", desc: "importで呼び出す" },
+            { key: "import UI/FancyUI/colour", insert: "import UI/FancyUI/colour", desc: "importで呼び出す" },
+            { key: "import UI/FancyUI/fancyui", insert: "import UI/FancyUI/fancyui", desc: "importで呼び出す" },
+            { key: "import UI/FancyUI/print ", insert: "import UI/FancyUI/print ", desc: "importで呼び出す" },
+            { key: "import Weapons/ArmorGenerator", insert: "import Weapons/ArmorGenerator", desc: "importで呼び出す" },
+            { key: "import Weapons/EmbueDaggers", insert: "import Weapons/EmbueDaggers", desc: "importで呼び出す" },
+            { key: "import Weapons/LanternTalisman", insert: "import Weapons/LanternTalisman", desc: "importで呼び出す" },
+            { key: "import Weapons/MajPack", insert: "import Weapons/MajPack", desc: "importで呼び出す" },
+            { key: "import Weapons/MajVines", insert: "import Weapons/MajVines", desc: "importで呼び出す" },
+            { key: "import Weapons/PsyCrusher", insert: "import Weapons/PsyCrusher", desc: "importで呼び出す" },
+            { key: "import Weapons/RecoilKick", insert: "import Weapons/RecoilKick", desc: "importで呼び出す" },
+            { key: "import Weapons/RootBats", insert: "import Weapons/RootBats", desc: "importで呼び出す" },
+            { key: "import Weapons/Scythe", insert: "import Weapons/Scythe", desc: "importで呼び出す" },
+            { key: "import Weapons/ShockwaveWhip", insert: "import Weapons/ShockwaveWhip", desc: "importで呼び出す" },
+            { key: "import Weapons/SpellBook", insert: "import Weapons/SpellBook", desc: "importで呼び出す" },
+            { key: "acronian_scout", insert: "acronian_scout", desc: "アルカディアの偵察隊\n敵のID" },
+            { key: "dysangelos_bearer", insert: "dysangelos_bearer", desc: "コレクター「ワルアンジェロ」\n敵のID" },
+            { key: "dysangelos_elementalist", insert: "dysangelos_elementalist", desc: "全てを受け入れた者\n敵のID" },
+            { key: "dysangelos_perfected", insert: "dysangelos_perfected", desc: "ワルアンジェロ（完全体）\n敵のID" },
+            { key: "huge_mosquito", insert: "huge_mosquito", desc: "大きな吸血蚊\n敵のID" },
+            { key: "flesh_scarab", insert: "flesh_scarab", desc: "石虫\n敵のID" },
+            { key: "wasp", insert: "wasp", desc: "ハチ\n敵のID" },
+            { key: "wasp_nest", insert: "wasp_nest", desc: "ハチの巣\n敵のID" },
+            { key: "tree_boss_harder", insert: "tree_boss_harder", desc: "レウケの残余、「怒木」\n敵のID" },
+            { key: "poena", insert: "poena", desc: "おしおき女王、「ペンペン」\n敵のID" },
+            { key: "small_spider", insert: "small_spider", desc: "タルタル\n敵のID" },
+            { key: "medlum_bat", insert: "medlum_bat", desc: "パタパタ\n敵のID" },
+            { key: "tiny_spider", insert: "tiny_spider", desc: "ドキドキ\n敵のID" },
+            { key: "small_bat", insert: "small_bat", desc: "ナメナメ\n敵のID" },
+            { key: "scorpion", insert: "scorpion", desc: "前歩きするカニっぽいやつ\n敵のID" },
+            { key: "spider_eggs", insert: "spider_eggs", desc: "マルマル\n敵のID" },
+            { key: "cool_bat", insert: "cool_bat", desc: "◘コウモリーズ\n敵のID" },
+            { key: "spider_boss_harder", insert: "spider_boss_harder", desc: "悪賢い「ギハカツヤ」\n敵のID" },
+            { key: "collossal_snail", insert: "collossal_snail", desc: "デカイカタツムリ\n敵のID" },
+            { key: "epic_snail", insert: "epic_snail", desc: "マジでデカイカタツムリ\n敵のID" },
+            { key: "ant", insert: "ant", desc: "アリ\n敵のID" },
+            { key: "ant_hill", insert: "ant_hill", desc: "アリの群れ\n敵のID" },
+            { key: "fluff", insert: "fluff", desc: "ぱふぱふ\n敵のID" },
+            { key: "mushroom_boss_harder", insert: "mushroom_boss_harder", desc: "怒りキノコ\n敵のID" },
+            { key: "mushroom_boss_fat", insert: "mushroom_boss_fat", desc: "ジメジメしめじ\n敵のID" },
+            { key: "mushroom_boss_skinny", insert: "mushroom_boss_skinny", desc: "DJエノキ\n敵のID" },
+            { key: "large_skeleton", insert: "large_skeleton", desc: "ガイコスケ\n敵のID" },
+            { key: "ghost", insert: "ghost", desc: "ブー\n敵のID" },
+            { key: "large_ghost", insert: "large_ghost", desc: "ビッグブー\n敵のID" },
+            { key: "small_skeleton", insert: "small_skeleton", desc: "ガイコージ// 非召喚\n敵のID" },
+            { key: "ghost_tomb", insert: "ghost_tomb", desc: "ナムアミダブツ\n敵のID" },
+            { key: "big_tomb", insert: "big_tomb", desc: "バラバラ〜\n敵のID" },
+            { key: "skeleton_boss_harder", insert: "skeleton_boss_harder", desc: "皮なしの「ハイハイ」\n敵のID" },
+            { key: "skeleton_boss_stage_2_harder", insert: "skeleton_boss_stage_2_harder", desc: "足なしの「ハイハイ」\n敵のID" },
+            { key: "small_skeleton_minion", insert: "small_skeleton_minion", desc: "ガイコージ// ボス召喚\n敵のID" },
+            { key: "fire_elemental", insert: "fire_elemental", desc: "火の精霊\n敵のID" },
+            { key: "mine_walker", insert: "mine_walker", desc: "鉱山の浮浪者\n敵のID" },
+            { key: "slave_master", insert: "slave_master", desc: "カチョウ\n敵のID" },
+            { key: "big_slave_master", insert: "big_slave_master", desc: "ブチョウ\n敵のID" },
+            { key: "fire_geyser", insert: "fire_geyser", desc: "ヒバシラ\n敵のID" },
+            { key: "bomb_cart", insert: "bomb_cart", desc: "ボンバーカート\n敵のID" },
+            { key: "bronze_guardian", insert: "bronze_guardian", desc: "銅のガーディアン\n敵のID" },
+            { key: "ki_slerper", insert: "ki_slerper", desc: "キビュッフェ\n敵のID" },
+            { key: "ki_eater", insert: "ki_eater", desc: "キショク\n敵のID" },
+            { key: "ki_gobbler", insert: "ki_gobbler", desc: "キグイ\n敵のID" },
+            { key: "ice_elemental", insert: "ice_elemental", desc: "氷の精霊\n敵のID" },
+            { key: "ice_elemental_elite", insert: "ice_elemental_elite", desc: "幹部クラスの氷の精霊\n敵のID" },
+            { key: "ice_pillar", insert: "ice_pillar", desc: "ツララ\n敵のID" },
+            { key: "ice_elemental_elite", insert: "ice_elemental_elite", desc: "ガリガリさん\n敵のID" },
+            { key: "yeti", insert: "yeti", desc: "霜の巨人\n敵のID" },
+            { key: "ice_wall", insert: "ice_wall", desc: "氷の壁\n敵のID" },
+            { key: "worm_rider", insert: "worm_rider", desc: "ミミズ乗り\n敵のID" },
+            { key: "ground_serpent", insert: "ground_serpent", desc: "オロチーッス\n敵のID" },
+            { key: "flying_serpent", insert: "flying_serpent", desc: "カツラ泥棒\n敵のID" },
+            { key: "heavy_hitter", insert: "heavy_hitter", desc: "鐘鳴らし\n敵のID" },
+            { key: "cult_guard", insert: "cult_guard", desc: "カルトのガードマン\n敵のID" },
+            { key: "poison_adept", insert: "poison_adept", desc: "毒使い\n敵のID" },
+            { key: "cult_sorcerer", insert: "cult_sorcerer", desc: "カルトの魔導師\n敵のID" },
+            { key: "cult_marksman", insert: "cult_marksman", desc: "カルトの狙撃者\n敵のID" },
+            { key: "serpent_handler", insert: "serpent_handler", desc: "蛇使い\n敵のID" },
+            { key: "acronian_cultist", insert: "acronian_cultist", desc: "アルカディアのカルト団員\n敵のID" },
+            { key: "nagaraja", insert: "nagaraja", desc: "侵食の「ナーガラージャ」\n敵のID" },
+            { key: "poison", insert: "poison", desc: "毒\n検索フィルタ" },
+            { key: "vigor", insert: "vigor", desc: "活力\n検索フィルタ" },
+            { key: "aether", insert: "aether", desc: "エーテル\n検索フィルタ" },
+            { key: "fire", insert: "fire", desc: "火\n検索フィルタ" },
+            { key: "air", insert: "air", desc: "空気\n検索フィルタ" },
+            { key: "ice", insert: "ice", desc: "氷\n検索フィルタ" },
+            { key: "arachnid", insert: "arachnid", desc: "クモ類\n検索フィルタ" },
+            { key: "serpent", insert: "serpent", desc: "ヘビ\n検索フィルタ" },
+            { key: "insect", insert: "insect", desc: "昆虫\n検索フィルタ" },
+            { key: "machine", insert: "machine", desc: "機械\n検索フィルタ" },
+            { key: "humanoid", insert: "humanoid", desc: "ヒューマノイド\n検索フィルタ" },
+            { key: "elemental", insert: "elemental", desc: "エレメンタル\n検索フィルタ" },
+            { key: "boss", insert: "boss", desc: "ボス\n検索フィルタ" },
+            { key: "phase1", insert: "phase1", desc: "フェーズ1\n検索フィルタ" },
+            { key: "phase2", insert: "phase2", desc: "フェーズ2\n検索フィルタ" },
+            { key: "phase3", insert: "phase3", desc: "フェーズ3\n検索フィルタ" },
+            { key: "spawner", insert: "spawner", desc: "スポーンポイント\n検索フィルタ" },
+            { key: "flying", insert: "flying", desc: "飛行\n検索フィルタ" },
+            { key: "slow", insert: "slow", desc: "遅くする\n検索フィルタ" },
+            { key: "ranged", insert: "ranged", desc: "遠距離\n検索フィルタ" },
+            { key: "explode", insert: "explode", desc: "爆発\n検索フィルタ" },
+            { key: "swarm", insert: "swarm", desc: "群れ\n検索フィルタ" },
+            { key: "unpushable", insert: "unpushable", desc: "押せない\n検索フィルタ" },
+            { key: "undamageable", insert: "undamageable", desc: "ダメージを受けない\n検索フィルタ" },
+            { key: "magic_resist", insert: "magic_resist", desc: "魔法耐性\n検索フィルタ" },
+            { key: "magic_vulnerability", insert: "magic_vulnerability", desc: "魔法への脆弱性\n検索フィルタ" },
+            { key: "immune_to_stun", insert: "immune_to_stun", desc: "スタン無効\n検索フィルタ" },
+            { key: "immune_to_ranged", insert: "immune_to_ranged", desc: "遠距離攻撃無効\n検索フィルタ" },
+            { key: "immune_to_debuff_damage", insert: "immune_to_debuff_damage", desc: "デバフダメージ無効\n検索フィルタ" },
+            { key: "immune_to_physical", insert: "immune_to_physical", desc: "物理攻撃無効\n検索フィルタ" },
+
+            // コメント系
+            { key: "//", insert: "/ ", desc: "1行コメント" },
+            { key: "/* */", insert: "*\n$1\n*/", desc: "ブロックコメント" },
+            { key: "/▼TODO▼", insert: "/▼TODO▼\n$1\n//▲TODO▲", desc: "TODOコメント" },
+            {
+                key: "/▼today▼",
+                insert: () => {
+                    const d = new Date();
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, "0");
+                    const day = String(d.getDate()).padStart(2, "0");
+                    return `/▼${y}-${m}-${day}▼\n$1\n//▲${y}-${m}-${day}▲`;
+                },
+                desc: "日付付きコメント"
+            }
+            // 例: { key: "item.right.state", insert: "item.right.state", desc: "複数セグメントの例" },
+        ];
+
+/* ============================================================
+   以下、エディタ本体
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const ed = $('ed'), hl = $('hl'), gi = $('gi'), g = $('g'), chips = $('chips'), detail = $('detail'), panel = $('panel');
+const STORE = 'stone-script-editor-v1';
+const SAMPLE = ['// Stone Script サンプル', 'var count = 0', '?loc.begin', '  count = 0', '?foe.hp < 10 & item.CanActivate()',
+  '  equipR vigor shield', '  activate R', ':', '  loadout 1', '>`0,1,HP = @hp@/@maxhp@'].join('\n');
+
+/* ---------- シンタックスハイライト ---------- */
+const RE = /(\/\/.*|\/\*[\s\S]*?(?:\*\/|$))|(^[ \t]*>.*$)|('[^'\n]*'|"[^"\n]*")|(@[^@\n]*@)|(#[0-9a-fA-F]{3,8}\b|#[a-z]+\b)|(\b\d+(?:\.\d+)?\b)|(^[ \t]*[?:])|(\b(?:var|func|for|import|new|equipL|equipR|equip|activate|loadout|disable|enable|brew|play|true|false|null)\b)|(\b(?:ui|math|string|color|foe|item|loc|storage|screen|draw|key|music|ambient|player|summon|sys|te|time|utc|res|buffs|debuffs|ai|encounter|harvest|pickup|pos|input|event|int)\b(?=\.))|(\.[A-Za-z_]\w*)/gm;
+const CLS = ['c', 'p', 's', 'i', 'col', 'n', 'q', 'k', 'ns', 'm'];
+const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+function highlight(src) {
+  let out = '', last = 0, m;
+  RE.lastIndex = 0;
+  while ((m = RE.exec(src))) {
+    if (m[0] === '') { RE.lastIndex++; continue; }
+    out += esc(src.slice(last, m.index));
+    const cls = CLS[m.slice(1).findIndex(x => x !== undefined)];
+    let t = esc(m[0]);
+    if (cls === 'p') t = t.replace(/@[^@\n]*@/g, x => '<span class="i">' + x + '</span>');
+    out += '<span class="' + cls + '">' + t + '</span>';
+    last = RE.lastIndex;
+  }
+  return out + esc(src.slice(last));
+}
+
+/* ---------- 描画（ハイライト・行番号・スクロール同期） ---------- */
+let lineCount = 0;
+function render() {
+  const v = ed.value;
+  hl.innerHTML = highlight(v) + '\n ';
+  const n = v.split('\n').length;
+  if (n !== lineCount) { lineCount = n; gi.textContent = Array.from({ length: n }, (_, i) => i + 1).join('\n'); }
+  sync(); status();
+}
+function sync() {
+  hl.style.transform = 'translate(' + (-ed.scrollLeft) + 'px,' + (-ed.scrollTop) + 'px)';
+  gi.style.transform = 'translateY(' + (-ed.scrollTop) + 'px)';
+}
+function status() {
+  const l = ed.value.slice(0, ed.selectionStart).split('\n');
+  $('st').textContent = 'Ln ' + l.length + ', Col ' + (l[l.length - 1].length + 1);
+}
+
+/* ---------- 補完 ---------- */
+let cands = [], active = 0, dismissed = false, lastK = '', lastPT = 'mouse';
+const WORD = /([A-Za-z0-9_]+(?:\.[A-Za-z0-9_]*)*)$/;
+
+function queryAtCursor() {
+  const left = ed.value.slice(0, ed.selectionStart);
+  const ls = left.lastIndexOf('\n') + 1, line = left.slice(ls);
+  const im = line.match(/^[ \t]*(import[ \t]+[\w\/]*)$/);           // import Games/Sn... のように空白込みで検索
+  if (im) return { q: im[1].replace(/\s+/, ' '), start: ls + line.length - im[1].length };
+  const m = left.match(WORD);
+  if (m) return { q: m[1], start: left.length - m[1].length };
+  if (/(^|[^\/])\/$/.test(left)) return { q: '/', start: left.length };
+  return { q: '', start: left.length };
+}
+function filterSnips(q) {
+  if (!q) return [];
+  const ql = q.toLowerCase(), dot = q.lastIndexOf('.'), after = q.slice(dot + 1).toLowerCase();
+  return snippets.filter(s => {
+    const k = s.key.toLowerCase();
+    if (k.startsWith('.')) return dot >= 0 && k.slice(1).startsWith(after);
+    if (k.startsWith('/')) return q === '/';
+    return k.startsWith(ql);
+  }).slice(0, 60);
+}
+function rangeFor(s) {
+  const pos = ed.selectionStart, left = ed.value.slice(0, pos);
+  if (s.key.startsWith('/')) return [pos, pos];                      // 入力済みの / は残して続きを挿入
+  if (s.key.startsWith('.')) return [left.lastIndexOf('.') + 1, pos];
+  return [queryAtCursor().start, pos];
+}
+const KIND = { fn: '関数', prop: '値', enemy: '敵ID', filter: 'フィルタ', import: 'import', item: 'アイテムID', comment: 'コメント' };
+function info(s) {
+  const d = s.desc || '', first = d.split('\n')[0].trim();
+  let kind = 'prop';
+  if (d.includes('敵のID')) kind = 'enemy';
+  else if (d.includes('検索フィルタ')) kind = 'filter';
+  else if (d.includes('importで')) kind = 'import';
+  else if (d.includes('GetCooldown()の中')) kind = 'item';
+  else if (s.key.startsWith('/')) kind = 'comment';
+  else if (typeof s.insert === 'string' && s.insert.includes('(')) kind = 'fn';
+  const ret = (first.match(/^戻り値:\s*(.+)$/) || [])[1];
+  let sub = ret ? '→ ' + ret : '';
+  if (kind === 'enemy' || kind === 'filter') sub = first;
+  if (kind === 'item') sub = typeof s.insert === 'string' ? s.insert : '';
+  if (kind === 'comment') sub = first;
+  return { kind, sub, ret };
+}
+function drawChips() {
+  chips.innerHTML = '';
+  if (!cands.length) { chips.innerHTML = '<span class="none">入力すると候補が出ます</span>'; return; }
+  cands.forEach((s, i) => {
+    const { kind, sub } = info(s);
+    const b = document.createElement('button');
+    b.className = 'chip ' + kind + (i === active ? ' on' : '');
+    b.dataset.i = i;
+    b.innerHTML = '<span>' + esc(s.key.trim()) + '</span>' + (sub ? '<i>' + esc(sub) + '</i>' : '');
+    chips.appendChild(b);
+  });
+  chips.scrollLeft = 0; chips.scrollTop = 0;
+}
+function drawDetail() {
+  const s = cands[active];
+  if (!s) { detail.innerHTML = '<p class="ret">候補をタップすると説明が表示されます。もう一度タップ（または「挿入」）で入力されます。</p>'; return; }
+  const { kind, ret } = info(s);
+  const lines = (s.desc || '').replace(/^\s+/, '').split('\n');
+  const bl = lines.findIndex(l => l.trim() === '');
+  const head = bl < 0 ? lines : lines.slice(0, bl);
+  let code = bl < 0 ? '' : lines.slice(bl + 1).join('\n').replace(/^ /, '');
+  const text = head.filter((l, i) => !(i === 0 && /^戻り値:/.test(l))).join('\n');
+  const ins = typeof s.insert === 'function' ? s.insert() : (s.insert || s.key);
+  detail.innerHTML =
+    '<div class="dh ' + kind + '"><span class="badge">' + KIND[kind] + '</span><b>' + esc(s.key.trim()) + '</b>' +
+    (ret ? '<span class="ret">→ ' + esc(ret) + '</span>' : '') + '<button id="ins">挿入</button></div>' +
+    (text ? '<p>' + esc(text) + '</p>' : '') +
+    (code.trim() ? '<pre class="ex">' + highlight(code) + '</pre>' : '') +
+    '<div class="ins">挿入内容: ' + esc(ins.replace(/\$1/g, '▮').replace(/\n/g, ' ⏎ ')) + '</div>';
+}
+function setActive(i) {
+  active = i;
+  chips.querySelectorAll('.chip').forEach((c, j) => c.classList.toggle('on', j === i));
+  drawDetail();
+}
+function refresh() {
+  lastK = ed.selectionStart + ':' + ed.value.length;
+  cands = dismissed ? [] : filterSnips(queryAtCursor().q);
+  active = 0; drawChips(); drawDetail();
+}
+
+/* ---------- 入力操作 ---------- */
+function typeText(t) {
+  ed.focus();
+  if (!document.execCommand('insertText', false, t)) {              // 失敗時のみフォールバック（undo履歴は途切れる）
+    ed.setRangeText(t, ed.selectionStart, ed.selectionEnd, 'end');
+    onInput();
+  }
+}
+function insertSnippet(s) {
+  if (!s) return;
+  const [a, b] = rangeFor(s);
+  let t = typeof s.insert === 'function' ? s.insert() : (s.insert || s.key);
+  let off = t.indexOf('$1');
+  if (off >= 0) t = t.replace('$1', ''); else off = t.length;
+  ed.focus(); ed.setSelectionRange(a, b);
+  typeText(t);
+  ed.setSelectionRange(a + off, a + off);
+  status(); refresh();
+}
+function indent(dir) {
+  const v = ed.value, a = ed.selectionStart, b = ed.selectionEnd;
+  if (dir > 0 && a === b) { typeText('  '); return; }
+  const ls = v.lastIndexOf('\n', a - 1) + 1;
+  let le = v.indexOf('\n', b); if (le < 0) le = v.length;
+  const block = v.slice(ls, le);
+  const out = block.split('\n').map(l => dir > 0 ? '  ' + l : l.replace(/^ {1,2}|^\t/, '')).join('\n');
+  ed.focus(); ed.setSelectionRange(ls, le); typeText(out);
+  if (a === b) { const p = Math.max(ls, a - (block.length - out.length)); ed.setSelectionRange(p, p); }
+  else ed.setSelectionRange(ls, ls + out.length);
+}
+
+let saveTimer;
+function onInput() {
+  dismissed = false; render(); refresh();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { try { localStorage.setItem(STORE, ed.value); } catch (e) {} }, 400);
+}
+ed.addEventListener('input', onInput);
+ed.addEventListener('scroll', sync, { passive: true });
+document.addEventListener('selectionchange', () => {
+  if (document.activeElement !== ed) return;
+  status();
+  if (ed.selectionStart + ':' + ed.value.length !== lastK) refresh();
+});
+
+ed.addEventListener('keydown', e => {
+  if (e.isComposing) return;
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    if (!e.shiftKey && cands.length && queryAtCursor().q) insertSnippet(cands[active]);
+    else indent(e.shiftKey ? -1 : 1);
+    return;
+  }
+  if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {  // オートインデント
+    const v = ed.value, pos = ed.selectionStart, ls = v.lastIndexOf('\n', pos - 1) + 1, line = v.slice(ls, pos);
+    let ind = line.match(/^[ \t]*/)[0];
+    if (/^\s*(\?|:\s*$|func\b|for\b)/.test(line)) ind += '  ';
+    e.preventDefault(); typeText('\n' + ind); return;
+  }
+  if (e.altKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp') && cands.length) {
+    e.preventDefault();
+    setActive((active + (e.key === 'ArrowDown' ? 1 : cands.length - 1)) % cands.length);
+    const c = chips.children[active]; if (c) c.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    return;
+  }
+  if (e.key === 'Escape') { dismissed = true; refresh(); }
+});
+
+/* ---------- パネル・キーバー操作 ---------- */
+document.addEventListener('pointerdown', e => { lastPT = e.pointerType; });
+[panel, $('keys')].forEach(el => el.addEventListener('mousedown', e => e.preventDefault()));  // PCでフォーカスを奪わない
+chips.addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  const i = +b.dataset.i;
+  if (lastPT === 'mouse' || i === active) insertSnippet(cands[i]); else setActive(i);  // タッチは1回目=説明、2回目=挿入
+});
+chips.addEventListener('pointerover', e => {
+  if (e.pointerType !== 'mouse') return;
+  const b = e.target.closest('.chip'); if (b && +b.dataset.i !== active) setActive(+b.dataset.i);
+});
+detail.addEventListener('click', e => { if (e.target.closest('#ins')) insertSnippet(cands[active]); });
+$('keys').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const a = b.dataset.a;
+  if (a === 'tab') indent(1);
+  else if (a === 'untab') indent(-1);
+  else if (a === 'undo') { ed.focus(); document.execCommand('undo'); }
+  else if (a === 'redo') { ed.focus(); document.execCommand('redo'); }
+  else if (a === 'info') panel.classList.toggle('collapsed');
+  else if (a === 'done') ed.blur();
+  else if (b.dataset.t) {
+    typeText(b.dataset.t);
+    if (b.dataset.b) { const p = ed.selectionStart - 1; ed.setSelectionRange(p, p); }
+  }
+});
+
+/* ---------- コピー / クリア ---------- */
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 1400); }
+$('bcopy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(ed.value); }
+  catch (e) { ed.select(); document.execCommand('copy'); }
+  toast('コピーしました');
+});
+$('bclr').addEventListener('click', () => {
+  if (!ed.value || !confirm('エディタの内容をすべて消しますか？')) return;
+  ed.value = ''; onInput();
+});
+
+/* ---------- iPhone：キーボード表示時のレイアウト追従 ---------- */
+function fit() {
+  const v = window.visualViewport; if (!v) return;
+  document.body.style.setProperty('--vh', v.height + 'px');
+  document.body.style.transform = 'translateY(' + v.offsetTop + 'px)';
+  document.body.classList.toggle('kb', innerHeight - v.height > 120);
+}
+if (window.visualViewport) { visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); fit(); }
+if (innerHeight < 700) panel.classList.add('collapsed');
+
+/* ---------- 起動 ---------- */
+try { ed.value = localStorage.getItem(STORE) ?? SAMPLE; } catch (e) { ed.value = SAMPLE; }
+render(); refresh();
+</script>
+</body>
+</html>
