@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#16171a">
+<title>Stone Script Editor</title>
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html" aria-label="サイトへ戻る" title="サイトへ戻る">←</a>
+  <div class="logo"><span>◆</span> Stone Script <small>Editor</small></div>
+  <div class="sp"></div><span id="st">Ln 1, Col 1</span>
+  <button id="bcopy">コピー</button><button id="bclr">クリア</button>
+</header>
+<main>
+  <div id="g"><pre id="gi">1</pre></div>
+  <div class="code">
+    <pre id="hl" aria-hidden="true"></pre>
+    <textarea id="ed" wrap="off" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="コード入力"></textarea>
+  </div>
+</main>
+<aside id="panel">
+  <div id="chips"></div>
+  <div id="detail"></div>
+</aside>
+<nav id="keys">
+  <button data-a="untab">⇤</button><button data-a="tab">⇥</button><button data-a="undo">↶</button><button data-a="redo">↷</button>
+  <button data-t="?">?</button><button data-t=":">:</button><button data-t=">">&gt;</button>
+  <button data-t="@@" data-b="1">@@</button><button data-t="()" data-b="1">( )</button><button data-t="''" data-b="1">' '</button>
+  <button data-t="[]" data-b="1">[ ]</button><button data-t="=">=</button><button data-t=".">.</button><button data-t="// ">//</button>
+  <button data-a="info" id="tg">ⓘ</button><button data-a="done">完了</button>
+</nav>
+<div id="toast"></div>
+
+<!-- 読み込み順が大事：snippets → gui-snippets → core → lint → flow → gui-rules → custom-rules → ui -->
+<script src="snippets.js"></script>
+<script src="gui-snippets.js"></script>
+<script src="core.js"></script>
+<script src="lint.js"></script>
+<script src="flow.js"></script>
+<script src="gui-rules.js"></script>
+<script src="custom-rules.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>

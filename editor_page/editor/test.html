@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>構文チェック テスト</title>
+<style>
+:root{color-scheme:dark}
+body{margin:0;padding:12px;background:#16171a;color:#d9d5cc;font:14px/1.6 -apple-system,"Hiragino Sans",system-ui,sans-serif}
+h1{font-size:17px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 6px}
+a{color:#e3a857}.sum{padding:8px 12px;border-radius:8px;margin:8px 0;font-weight:700}
+.sum.ok{background:#1d2b1d;color:#98c379}.sum.ng{background:#2e1c1e;color:#e06c75}
+.row{border-bottom:1px solid #2c2f35;padding:6px 0}.row b.ok{color:#98c379}.row b.ng{color:#e06c75}
+pre{margin:4px 0 0;background:#121316;border:1px solid #2c2f35;border-radius:6px;padding:6px 8px;font:12px/1.5 ui-monospace,Menlo,monospace;overflow:auto;white-space:pre-wrap}
+textarea{width:100%;min-height:140px;box-sizing:border-box;background:#121316;color:#d9d5cc;border:1px solid #2c2f35;border-radius:6px;padding:8px;font:16px/1.5 ui-monospace,Menlo,monospace}
+button{font:inherit;background:#25282d;color:inherit;border:1px solid #2c2f35;border-radius:8px;padding:6px 14px}
+.is{padding:6px 0;border-bottom:1px solid #2c2f35}.e{color:#e06c75}.w{color:#e5c07b}
+.mute{color:#8a8f98;font-size:12px}
+</style>
+</head>
+<body>
+<h1>構文チェック テスト</h1>
+<p class="mute"><a href="./">← エディタへ</a>　／　<span id="mode"></span></p>
+<div id="sum"></div>
+<div id="res"></div>
+
+<h2>その場で試す</h2>
+<textarea id="try" spellcheck="false" autocapitalize="off" autocorrect="off">?hp < 10 &&
+  equipR vigor shield
+:
+  loadout 1</textarea>
+<p><button id="go">チェック</button></p>
+<div id="out"></div>
+
+<!-- 読み込み順: lint → flow → custom-rules → tests -->
+<script src="lint.js"></script>
+<script src="flow.js"></script>
+<script>
+// ?builtin を付けて開くと GUI登録・custom-rules.js を読み込まず、組み込みルールだけを検証します
+var builtinOnly = /[?&]builtin/.test(location.search);
+if (!builtinOnly) document.write('<script src="gui-rules.js"><\/script><script src="custom-rules.js"><\/script>');
+</script>
+<script src="tests.js"></script>
+<script>
+(function () {
+  var SS = window.SS, esc = function (s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
+  document.getElementById('mode').innerHTML = builtinOnly
+    ? '組み込みルールのみ（<a href="test.html">GUI登録・custom-rules.js も含める</a>）'
+    : 'GUI登録・custom-rules.js を含む（<a href="test.html?builtin=1">組み込みのみで試す</a>）';
+  var fmt = function (a) { return a.length ? a.map(function (x) { return x[0] + '行' + (x[1] === 'e' ? 'エラー' : '注意'); }).join(' / ') : '指摘なし'; };
+  var ng = 0, html = '';
+  (window.SS_TESTS || []).forEach(function (t) {
+    var got, msg = '';
+    try { var r = SS.lint(t.code); got = r.map(function (x) { return [x.no, x.lv]; }); msg = r.map(function (x) { return x.no + '行: ' + x.msg; }).join('\n'); }
+    catch (e) { got = [['ERR', String(e)]]; }
+    var ok = JSON.stringify(got) === JSON.stringify(t.expect);
+    if (!ok) ng++;
+    html += '<div class="row"><b class="' + (ok ? 'ok' : 'ng') + '">' + (ok ? '✓' : '✗') + '</b> ' + esc(t.name) +
+      (ok ? '' : '<div class="mute">期待: ' + esc(fmt(t.expect)) + '　実際: ' + esc(fmt(got)) + '</div><pre>' + esc(t.code) + '</pre><pre>' + esc(msg) + '</pre>') + '</div>';
+  });
+  var n = (window.SS_TESTS || []).length;
+  document.getElementById('sum').innerHTML = '<div class="sum ' + (ng ? 'ng' : 'ok') + '">' + (ng ? '✗ ' + ng + ' 件失敗 / ' + n + ' 件' : '✓ ' + n + ' 件すべて成功') + '</div>';
+  document.getElementById('res').innerHTML = html;
+
+  document.getElementById('go').onclick = function () {
+    var src = document.getElementById('try').value, r = SS.lint(src), lines = src.split('\n');
+    document.getElementById('out').innerHTML = r.length ? r.map(function (x) {
+      return '<div class="is"><span class="' + x.lv + '">' + (x.lv === 'e' ? '✖ エラー' : '⚠ 注意') + ' ' + x.no + '行目</span><br>' + esc(x.msg) + '<br><span class="mute">' + esc((lines[x.no - 1] || '').trim()) + '</span></div>';
+    }).join('') : '<div class="sum ok">✓ 問題なし</div>';
+  };
+  document.getElementById('go').onclick();
+})();
+</script>
+</body>
+</html>
