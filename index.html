@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stone Script 攻略ガイド</title>
+<style>
+:root{--bg:#1d2127;--pn:#272d35;--tx:#dde2e8;--mu:#8b95a3;--ln:#3a424d;--ac:#e0a94a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.85 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;-webkit-text-size-adjust:100%}
+.top{padding:40px 20px 24px;max-width:760px;margin:auto}h1{font-size:clamp(26px,6vw,38px);line-height:1.3;margin:0 0 8px}.top p{color:var(--mu);margin:0}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--ln);display:flex;gap:4px;overflow-x:auto;padding:8px 12px;white-space:nowrap}
+nav a{color:var(--mu);text-decoration:none;padding:6px 12px;border-radius:6px;font-size:14px}nav a:hover{color:var(--ac)}
+main{max-width:760px;margin:auto;padding:0 20px 60px}section{padding-top:36px;scroll-margin-top:50px}
+h2{font-size:22px;margin:0 0 16px;padding-left:12px;border-left:4px solid var(--ac)}h3{font-size:17px;margin:28px 0 8px;color:var(--ac)}p{margin:0 0 14px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace}p code,.note code{background:var(--pn);padding:1px 6px;border-radius:4px;font-size:.9em}
+.note{background:var(--pn);border-left:4px solid var(--ac);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:15px}
+.code{margin:16px 0;background:#14171b;border:1px solid var(--ln);border-radius:8px;overflow:hidden}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:6px 8px 6px 14px;background:var(--pn);color:var(--mu);font-size:13px;min-height:40px}
+.acts{display:flex;gap:6px}.copy,.open{background:none;border:1px solid var(--ln);color:var(--tx);border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer}.copy:hover,.open:hover{border-color:var(--ac);color:var(--ac)}nav a.ed{color:var(--ac);font-weight:700}
+pre{margin:0;padding:12px 0;overflow-x:auto;counter-reset:n;font-size:14px;line-height:1.6}
+.l{display:block;white-space:pre;padding-right:16px;min-width:max-content}
+.l::before{counter-increment:n;content:counter(n);display:inline-block;width:2.6em;margin-right:14px;text-align:right;color:#5d6775;user-select:none;-webkit-user-select:none}
+footer{text-align:center;color:var(--mu);font-size:13px;padding:24px}
+</style>
+</head>
+<body>
+<header class="top"><h1>Stone Script 攻略ガイド</h1><p>Stone Story RPG のスクリプトを学ぶ</p></header>
+<nav><a href="#s0">はじめに</a><a href="#s1">基本の書き方</a><a class="ed" href="editor/index.html">Script Editor</a></nav>
+<main>
+<section id="s0"><h2>はじめに</h2><p>ここに解説文を書きます。<code>インラインコード</code>はバッククォートで囲みます。</p><p>空行を入れると段落が分かれます。</p><figure class="code"><div class="bar"><span>sample.txt</span><span class="acts"><button class="open" type="button">エディタで開く</button><button class="copy" type="button">コピー</button></span></div><pre data-code="// サンプルコード（書き換えてください）
+line 2
+line 3"><code><span class="l">// サンプルコード（書き換えてください）</span><span class="l">line 2</span><span class="l">line 3</span></code></pre></figure><aside class="note">ポイントや注意点はこのボックスに書けます。</aside></section><section id="s1"><h2>基本の書き方</h2><h3>小見出し</h3><p>解説文を追加・削除・並べ替えできます。</p><figure class="code"><div class="bar"><span></span><span class="acts"><button class="open" type="button">エディタで開く</button><button class="copy" type="button">コピー</button></span></div><pre data-code="// コードブロックは何個でも置けます"><code><span class="l">// コードブロックは何個でも置けます</span></code></pre></figure></section>
+</main>
+<footer>非公式ファンサイト</footer>
+<script type="application/json" id="site-data">{"title":"Stone Script 攻略ガイド","sub":"Stone Story RPG のスクリプトを学ぶ","foot":"非公式ファンサイト","accent":"#e0a94a","bundle":true,"sections":[{"title":"はじめに","blocks":[{"type":"text","text":"ここに解説文を書きます。`インラインコード`はバッククォートで囲みます。\n\n空行を入れると段落が分かれます。"},{"type":"code","title":"sample.txt","text":"// サンプルコード（書き換えてください）\nline 2\nline 3"},{"type":"note","text":"ポイントや注意点はこのボックスに書けます。"}]},{"title":"基本の書き方","blocks":[{"type":"h3","text":"小見出し"},{"type":"text","text":"解説文を追加・削除・並べ替えできます。"},{"type":"code","title":"","text":"// コードブロックは何個でも置けます"}]}]}</script>
+<script>
+document.querySelectorAll('.copy').forEach(b=>b.onclick=async()=>{const t=b.closest('figure').querySelector('pre').dataset.code;try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}b.textContent='コピー済み';setTimeout(()=>b.textContent='コピー',1500)});
+document.querySelectorAll('.open').forEach(b=>b.onclick=()=>{const t=b.closest('figure').querySelector('pre').dataset.code;if(!/^(https?|file):$/.test(location.protocol)){alert('プレビューでは開けません。ダウンロードしたサイトで使えます');return}location.href='editor/index.html#code='+encodeURIComponent(t)});
+</script>
+</body>
+</html>
